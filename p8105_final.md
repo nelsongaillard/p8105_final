@@ -1,0 +1,70 @@
+P8105: Final Project Proposal
+================
+2025-11-05
+
+Nelson Gaillard (ng3005), Matariya Rattanapan (mkr2158), Mahitha Jangeti
+(mj3229), Jefferson Remo (jr4550), Jonathan Huynh (jkh2157)
+
+## Riding Out the Storm: MTA Ridership Through the COVID and Weather
+
+#### Motivation for this project
+
+The COVID-19 pandemic altered patterns of public transit use, exposing
+the sensitivity of urban mobility to both public-health and
+environmental conditions. Examining how MTA ridership fluctuated with
+changing case counts and weather conditions can help identify which
+factors most strongly affected transit demand, and how long recovery
+took across time and boroughs. These nsights can guide policy around
+public health preparedness, transit safety, and infrastructure planning
+under climate variability.
+
+#### Intended final products
+
+Website Video Report
+
+Plot related to Covid-19
+
+#### Anticipated data sources
+
+MTA Subway Ridership Data (2019-Present) COVID-19 Weather dataset from
+class
+
+#### Planned analyses
+
+- Covid vs. Subway ridership
+  - Visualize how different MTA systems recovered post-covid. Which ones
+    were in usage first (i.e. bus vs. subway)
+  - Pre/post covid trends
+- Weather vs. Subway ridership
+  - How usage differs across different weather; how it impacts which
+    type of transport is used more often
+- MTA data
+  - Which station never sleeps: hourly activity analysis
+  - Borough division
+  - Weekday vs. weekend ridership
+  - Rats in each stop
+
+#### Visualizations
+
+- Plots and Plotly
+- Dashboard
+- Subway map
+
+#### Coding challenges
+
+- There may be presence of missing data between datasets when merging.
+- Temporality may also presnt a challenge if metrics of time are
+  inconsistent.
+- Data availability between boroughs may differ in frequency and weight;
+  we can remedy this with data imputation
+- Geospatial mismath between MTA stations, boroughs, and zip codes may
+  present issues when making relationship analyses
+
+#### Planned timeline
+
+- Project Review Meeting: November 10-14
+- Finish Coding: November 22nd
+- Begin Report: November 23rd
+- Finish Website/Screencast by December 1 (5 days for revisions)
+- Submit Report: December 6, 11:59pm
+- Submit Webpage and Screencast: by December 6, 11:59pm
