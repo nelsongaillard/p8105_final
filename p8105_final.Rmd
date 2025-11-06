@@ -4,6 +4,12 @@ date: "2025-11-05"
 output: github_document
 ---
 
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+```
+
+
 Nelson Gaillard (ng3005),
 Matariya Rattanapan (mkr2158),
 Mahitha Jangeti (mj3229),
@@ -18,17 +24,39 @@ The COVID-19 pandemic altered patterns of public transit use, exposing the sensi
 
 #### Intended final products
 
-Website
-Video
-Report
-
-Plot related to Covid-19
+- Website
+- Report
+- Screecast Video
 
 #### Anticipated data sources
 
-MTA Subway Ridership Data (2019-Present)
+MTA Ridership Data 
+```{r}
+MTA_df =
+  read_csv("data/MTA.csv", na = c("NA", ".", "")) |> 
+  janitor::clean_names()
+```
+
+Pre-Covid MTA Ridership Data
+```{r}
+pre_COVID_MTA_df = 
+  read_csv("data/Monthly(from 2008).csv", na = c("NA", ".", "")) |> 
+  janitor::clean_names()
+```
+
 COVID-19
-Weather dataset from class
+```{r}
+COVID_df =
+  read_csv("data/COVID19.csv", na = c("NA", ".", "")) |> 
+  janitor::clean_names()
+```
+
+Weather
+```{r}
+weather_df = 
+  data("weather_df")
+```
+
 
 #### Planned analyses
 
@@ -55,6 +83,8 @@ Weather dataset from class
 - Temporality may also presnt a challenge if metrics of time are inconsistent.
 - Data availability between boroughs may differ in frequency and weight; we can remedy this with data imputation
 - Geospatial mismath between MTA stations, boroughs, and zip codes may present issues when making relationship analyses
+- May need to consider whether to model certain variables as numerical or categorical.
+- Aggregating variables relevant to answering our research question.
 
 #### Planned timeline
 
