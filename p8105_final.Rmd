@@ -1,20 +1,18 @@
 ---
 title: "P8105: Final Project Proposal"
-date: "2025-11-05"
+date: "November 7, 2026"
 output: github_document
 ---
-
-```{r}
-library(tidyverse)
-library(p8105.datasets)
-```
-
-
 Nelson Gaillard (ng3005),
 Matariya Rattanapan (mkr2158),
 Mahitha Jangeti (mj3229),
 Jefferson Remo (jr4550),
 Jonathan Huynh (jkh2157)
+
+```{r}
+library(tidyverse)
+library(p8105.datasets)
+```
 
 ## Riding Out the Storm: MTA Ridership Through the COVID and Weather
 
@@ -40,7 +38,7 @@ MTA_df =
 Pre-Covid MTA Ridership Data
 ```{r}
 pre_COVID_MTA_df = 
-  read_csv("data/Monthly(from 2008).csv", na = c("NA", ".", "")) |> 
+  read_csv("data/Monthly(from 2008).csv", na = c("NA", ".", "")) |>
   janitor::clean_names()
 ```
 
@@ -60,38 +58,65 @@ weather_df =
 
 #### Planned analyses
 
-- Covid vs. Subway ridership
-  - Visualize how different MTA systems recovered post-covid. Which ones were in usage first (i.e. bus vs. subway)
-  - Pre/post covid trends
-- Weather vs. Subway ridership
-  - How usage differs across different weather; how it impacts which type of transport is used more often
-- MTA data
-  - Which station never sleeps: hourly activity analysis
-  - Borough division
-  - Weekday vs. weekend ridership
-  - Rats in each stop
+##### Individual descriptive analyses of our datasets
+- MTA Ridership Overview
+  - Aggregate daily ridership in monthly averages (2018-2025) and look at trends overall across all different types of transportation (AAR, SIR, MNR, Subway, LIRR, Bus)
+    - Line graph
+  - Visualize pre-pandemic baseline, pandemic, post-pandemic, 'pandemic recovery'
+    - Cam make these each into separate graphs
+  - Weekday vs weekend ridership volume
+    - Boxplot or violin graph
+- COVID-19 Overview
+  - Plot daily and weekly average
+    - Line graph
+    - Highlight specific areas of the graph that align with locdown start, vaccine rollout, omicron surge, etc.
+  - Identify major NYC waves and define peaks by calculating maximums
+  - Correlation analysis between cases, hospitalizations, and death
+    - Heat map
+- Weather Overview
+  - Can compute average_temp, rain, snow
+  - Plot of temperature, vs. time, histogram for rainy and snowy days
+
+##### Comparative / Paired Analyses
+
+- Bus vs Subway vs others recovery post pandemic 
+  - Stacked area chart 
+- COVID-19 vs Ridership 
+  - Merge data by date
+- Lag analysis: to see the time between when COVID risk increases (by case numbers) and when people change ridership behaviors 
+- Weather vs MTA usage 
+  - Look at which temps = decrease or increase in ridership 
+  - Which mode of transportation was used most as weather changed 
+- Regression analysis: MTA ridership vs. COVID-19 vs. Weather 
 
 #### Visualizations
 
 - Plots and Plotly
+  - Line plots: daily/monthly ridership trends 2008 - 2025
+  - Density plot: pre vs. post covid distributions 2021 - 2025
+  - Scatterplot: temperature vs. monthly ridership
+  - Boxplots comparing weekday vs weekend ridership distributions
+  - Stacked area charts
+  - Heat map
 - Dashboard
 - Subway map
 
 #### Coding challenges
 
 - There may be presence of missing data between datasets when merging.
-- Temporality may also presnt a challenge if metrics of time are inconsistent.
+- Temporality may also present a challenge if metrics of time are inconsistent.
 - Data availability between boroughs may differ in frequency and weight; we can remedy this with data imputation
-- Geospatial mismath between MTA stations, boroughs, and zip codes may present issues when making relationship analyses
+- Geospatial mismatch between MTA stations, boroughs, and zip codes may present issues when making relationship analyses
 - May need to consider whether to model certain variables as numerical or categorical.
 - Aggregating variables relevant to answering our research question.
+- Need to know how to handle extreme values of variable(s) in question
 
 #### Planned timeline
 
-- Project Review Meeting: November 10-14
-- Finish Coding: November 22nd
-- Begin Report: November 23rd
-- Finish Website/Screencast by December 1 (5 days for revisions)
-- Submit Report: December 6, 11:59pm
-- Submit Webpage and Screencast: by December 6, 11:59pm
+- November 10-14: Project Review Meeting
+- November 22: Finish Coding
+- November 23: Begin Report
+  - November 23: Group meeting
+- December 1: Finish Website / Screencast
+- December 6: Submit Report, Webpage, and Screencast 
 
