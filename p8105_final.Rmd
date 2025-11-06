@@ -51,8 +51,10 @@ COVID_df =
 
 Weather
 ```{r}
-weather_df = 
-  data("weather_df")
+data("weather_df")
+
+weather_df |> 
+  janitor::clean_names()
 ```
 
 
