@@ -9,7 +9,7 @@ Mahitha Jangeti (mj3229),
 Jefferson Remo (jr4550),
 Jonathan Huynh (jkh2157)
 
-```{r}
+```{r, message = FALSE}
 library(tidyverse)
 library(p8105.datasets)
 ```
@@ -28,35 +28,34 @@ The COVID-19 pandemic altered patterns of public transit use, exposing the sensi
 
 #### Anticipated data sources
 
-MTA Ridership Data 
-```{r}
+MTA Daily Ridership Data: 2020 - 2025
+```{r, message = FALSE}
 MTA_df =
   read_csv("data/MTA.csv", na = c("NA", ".", "")) |> 
-  janitor::clean_names()
+  janitor::clean_names() |> 
+  head(5)
 ```
 
 Pre-Covid MTA Ridership Data
-```{r}
+```{r, message = FALSE}
 pre_COVID_MTA_df = 
   read_csv("data/Monthly(from 2008).csv", na = c("NA", ".", "")) |>
-  janitor::clean_names()
+  janitor::clean_names() 
 ```
 
 COVID-19
-```{r}
+```{r, message = FALSE}
 COVID_df =
   read_csv("data/COVID19.csv", na = c("NA", ".", "")) |> 
   janitor::clean_names()
 ```
 
-Weather
-```{r}
-data("weather_df")
-
-weather_df |> 
+NOAA Weather Data for NYC (Central Park)
+```{r, message = FALSE}
+weather_df = 
+  read_csv("data/weather_cp.csv", na = c("NA", ".", "")) |> 
   janitor::clean_names()
 ```
-
 
 #### Planned analyses
 

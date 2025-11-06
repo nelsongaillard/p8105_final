@@ -7,20 +7,6 @@ Nelson Gaillard (ng3005), Matariya Rattanapan (mkr2158), Mahitha Jangeti
 
 ``` r
 library(tidyverse)
-```
-
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ dplyr     1.1.4     ✔ readr     2.1.5
-    ## ✔ forcats   1.0.0     ✔ stringr   1.5.1
-    ## ✔ ggplot2   3.5.2     ✔ tibble    3.3.0
-    ## ✔ lubridate 1.9.4     ✔ tidyr     1.3.1
-    ## ✔ purrr     1.1.0     
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
-
-``` r
 library(p8105.datasets)
 ```
 
@@ -45,40 +31,22 @@ under climate variability.
 
 #### Anticipated data sources
 
-MTA Ridership Data
+MTA Daily Ridership Data: 2020 - 2025
 
 ``` r
 MTA_df =
   read_csv("data/MTA.csv", na = c("NA", ".", "")) |> 
-  janitor::clean_names()
+  janitor::clean_names() |> 
+  head(5)
 ```
-
-    ## Rows: 14791 Columns: 3
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr (2): Date, Mode
-    ## num (1): Count
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 Pre-Covid MTA Ridership Data
 
 ``` r
 pre_COVID_MTA_df = 
   read_csv("data/Monthly(from 2008).csv", na = c("NA", ".", "")) |>
-  janitor::clean_names()
+  janitor::clean_names() 
 ```
-
-    ## Rows: 933 Columns: 3
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (1): Agency
-    ## num  (1): Ridership
-    ## date (1): Month
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 COVID-19
 
@@ -88,22 +56,18 @@ COVID_df =
   janitor::clean_names()
 ```
 
-    ## Rows: 2054 Columns: 55
-    ## ── Column specification ────────────────────────────────────────────────────────
-    ## Delimiter: ","
-    ## chr  (1): date_of_interest
-    ## dbl (26): DEATH_COUNT, DEATH_COUNT_7DAY_AVG, BX_HOSPITALIZED_COUNT, BX_DEATH...
-    ## num (28): CASE_COUNT, PROBABLE_CASE_COUNT, HOSPITALIZED_COUNT, CASE_COUNT_7D...
-    ## 
-    ## ℹ Use `spec()` to retrieve the full column specification for this data.
-    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
-
-Weather
+NOAA Weather Data for NYC (Central Park)
 
 ``` r
 weather_df = 
-  data("weather_df")
+  read_csv("data/weather_cp.csv", na = c("NA", ".", "")) |> 
+  janitor::clean_names()
 ```
+
+    ## Warning: One or more parsing issues, call `problems()` on your data frame for details,
+    ## e.g.:
+    ##   dat <- vroom(...)
+    ##   problems(dat)
 
 #### Planned analyses
 
