@@ -18,7 +18,7 @@ the sensitivity of urban mobility to both public-health and
 environmental conditions. Examining how MTA ridership fluctuated with
 changing case counts and weather conditions can help identify which
 factors most strongly affected transit demand, and how long recovery
-took across time and boroughs. These nsights can guide policy around
+took across time and boroughs. These insights can guide policy around
 public health preparedness, transit safety, and infrastructure planning
 under climate variability.
 
@@ -73,7 +73,7 @@ weather_df =
     - Line graph
   - Visualize pre-pandemic baseline, pandemic, post-pandemic, ‘pandemic
     recovery’
-    - Cam make these each into separate graphs
+    - Can make these each into separate graphs
   - Weekday vs weekend ridership volume
     - Boxplot or violin graph
 - COVID-19 Overview
@@ -105,7 +105,7 @@ weather_df =
 
 - Plots and Plotly
   - Line plots: daily/monthly ridership trends 2008 - 2025
-  - Density plot: pre vs. post covid distributions 2021 - 2025
+  - Density plot: pre vs. post COVID-19 distributions 2021 - 2025
   - Scatterplot: temperature vs. monthly ridership
   - Boxplots comparing weekday vs weekend ridership distributions
   - Stacked area charts
