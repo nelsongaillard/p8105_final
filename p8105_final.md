@@ -30,16 +30,15 @@ under climate variability.
 
 #### Anticipated data sources
 
-MTA Daily Ridership Data: 2020 - 2025
+MTA Daily Ridership Data: 2020 - 2025 (From data.ny.gov)
 
 ``` r
 MTA_df =
   read_csv("data/MTA.csv", na = c("NA", ".", "")) |> 
-  janitor::clean_names() |> 
-  head(5)
+  janitor::clean_names()
 ```
 
-Pre-Covid MTA Ridership Data
+Pre-Covid MTA Ridership Data (From catalog.data.gov)
 
 ``` r
 pre_COVID_MTA_df = 
@@ -47,7 +46,7 @@ pre_COVID_MTA_df =
   janitor::clean_names() 
 ```
 
-COVID-19
+COVID-19 (From data.cityofnewyork.us)
 
 ``` r
 COVID_df =
@@ -55,18 +54,13 @@ COVID_df =
   janitor::clean_names()
 ```
 
-NOAA Weather Data for NYC (Central Park)
+NOAA Weather Data for NYC, Central Park (From ncei.noaa.gov)
 
 ``` r
 weather_df = 
   read_csv("data/weather_cp.csv", na = c("NA", ".", "")) |> 
   janitor::clean_names()
 ```
-
-    ## Warning: One or more parsing issues, call `problems()` on your data frame for details,
-    ## e.g.:
-    ##   dat <- vroom(...)
-    ##   problems(dat)
 
 #### Planned analyses
 

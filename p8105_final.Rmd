@@ -27,30 +27,29 @@ The COVID-19 pandemic altered patterns of public transit use, exposing the sensi
 
 #### Anticipated data sources
 
-MTA Daily Ridership Data: 2020 - 2025
+MTA Daily Ridership Data: 2020 - 2025 (From data.ny.gov)
 ```{r, message = FALSE}
 MTA_df =
   read_csv("data/MTA.csv", na = c("NA", ".", "")) |> 
-  janitor::clean_names() |> 
-  head(5)
+  janitor::clean_names()
 ```
 
-Pre-Covid MTA Ridership Data
+Pre-Covid MTA Ridership Data (From catalog.data.gov)
 ```{r, message = FALSE}
 pre_COVID_MTA_df = 
   read_csv("data/Monthly(from 2008).csv", na = c("NA", ".", "")) |>
   janitor::clean_names() 
 ```
 
-COVID-19
+COVID-19 (From data.cityofnewyork.us)
 ```{r, message = FALSE}
 COVID_df =
   read_csv("data/COVID19.csv", na = c("NA", ".", "")) |> 
   janitor::clean_names()
 ```
 
-NOAA Weather Data for NYC (Central Park)
-```{r, message = FALSE}
+NOAA Weather Data for NYC, Central Park (From ncei.noaa.gov)
+```{r, message = FALSE, warning = FALSE}
 weather_df = 
   read_csv("data/weather_cp.csv", na = c("NA", ".", "")) |> 
   janitor::clean_names()
