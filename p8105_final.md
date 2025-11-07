@@ -7,7 +7,6 @@ Nelson Gaillard (ng3005), Matariya Rattanapan (mkr2158), Mahitha Jangeti
 
 ``` r
 library(tidyverse)
-library(p8105.datasets)
 ```
 
 ## Riding Out the Storm: MTA Ridership Through the COVID and Weather
@@ -86,7 +85,7 @@ weather_df =
 - COVID-19 Overview
   - Plot daily and weekly average
     - Line graph
-    - Highlight specific areas of the graph that align with locdown
+    - Highlight specific areas of the graph that align with lockdown
       start, vaccine rollout, omicron surge, etc.
   - Identify major NYC waves and define peaks by calculating maximums
   - Correlation analysis between cases, hospitalizations, and death
