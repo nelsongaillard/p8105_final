@@ -245,6 +245,62 @@ weather_df =
 
 - this data set stores temperature as tenths of degrees celcius so we had to fix that (ie 250 --> actually 25C) // Used central park as proxy 
 
+#### Plot Average Temperature by Year
+
+```{r}
+weather_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~average_temp,
+    type = "scatter",
+    mode = "markers",
+    marker = list(
+      color = ~average_temp,
+      colorscale = "Viridis",
+      colorbar = list(title = "Temperature (°C)"),
+      size = 5,
+      opacity = 0.7
+    )
+) |>
+  layout(
+    title = "NYC Average Temperature by Year (2018-2025)",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "Average Temperature (°C)")
+  )
+```
+
+- The plot shows a clear and consistent seasonal pattern in NYC temperatures, with cold winters (often below 0°C) and warm summers that regularly exceed 25–30°C. 
+
+#### Plot Snow Distribution by Year
+```{r}
+weather_df |>
+  mutate(
+    month = month(date, label = TRUE, abbr = FALSE),
+    month = factor(month, 
+                   levels = c("December", "January", "February", "March"))
+  ) |>
+  filter(
+    snow > 0,
+    month %in% c("December", "January", "February", "March")
+  ) |>
+  group_by(year, month) |>
+  summarise(total_snow = sum(snow), .groups = "drop") |> 
+  ggplot(aes(x = month, y = total_snow, fill = month)) +
+  geom_col(alpha = 0.8) +
+  facet_wrap(~year, ncol = 2) +
+  labs(
+    title = "NYC Monthly Snowfall (mm) by Year (2018-2025)",
+    x = "Month",
+    y = "Total Snowfall (mm)",
+    fill = ""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+- NYC snowfall is charted only for December through March because these four winter months account for virtually all measurable snowfall, making the analysis more meaningful. 
+- Across these winters, snowfall is highly variable: 2018 and 2021 stand out as the snowiest seasons // 2019, 2020, 2024, and 2025 show more moderate but still noticeable accumulation spread across one or two winter months, 2022 has relatively light snowfall, and 2023 is nearly snow-free.
+- uneven pattern highlights how NYC winters have become increasingly inconsistent
+
 
 
 
