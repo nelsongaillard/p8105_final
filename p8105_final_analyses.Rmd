@@ -203,7 +203,47 @@ plot_ly(
 
 - Interpretation: The correlation matrix shows that hospitalizations and deaths are strongly related, which reflects the expected clinical progression from severe illness to mortality. Cases have only a moderate correlation with hospitalizations and a weak correlation with deaths, likely because widespread vaccination, changing testing behavior, and the milder Omicron waves reduced the proportion of cases that became severe. 
 
+# WEATHER ANALYSIS
 
+#### Reading in weather data
+
+```{r}
+nyc_weather =
+read.csv("data/nyc_weather.csv")
+```
+
+#### Cleaning up weather data
+
+```{r}
+weather_df =
+  nyc_weather |> 
+  janitor::clean_names() |> 
+  mutate(
+    date = as.Date(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date),
+    month = case_match(month,
+                       1 ~ "January",
+                       2 ~ "February",
+                       3 ~ "March", 
+                       4 ~ "April",
+                       5 ~ "May",
+                       6 ~ "June",
+                       7 ~ "July",
+                       8 ~ "August",
+                       9 ~ "September", 
+                       10 ~ "October",
+                       11 ~ "November",
+                       12 ~ "December"
+    ),
+    tmin_c = tmin / 10,
+    tmax_c = tmax / 10,
+    average_temp = (tmin_c + tmax_c) / 2,
+  ) |> 
+  filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
+```
+
+- this data set stores temperature as tenths of degrees celcius so we had to fix that (ie 250 --> actually 25C) // Used central park as proxy 
 
 
 
