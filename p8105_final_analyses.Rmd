@@ -170,7 +170,38 @@ clean_covid_df |>
 - After the initial lockdown period, the weekly average shows a sharp and sustained decline in cases, reflecting the immediate impact of reduced mobility and strict public health measures. A similar post–vaccine-rollout decline appears in early 2021, where cases fall noticeably, reflecting the early effects of widespread vaccination and reduced transmission. 
 - This again aligns with what we saw in the previous graph 
 
+#### Correlation Heat Map of Cases, Hospitalization, and Deaths
+```{r}
+corr_matrix =
+  clean_covid_df |>
+    select(
+      Cases = case_count,
+      Hospitalizations = hospitalized_count,
+      Deaths = death_count
+    ) |>
+    cor(use = "complete.obs")
 
+plot_ly(
+  x = colnames(corr_matrix),
+  y = colnames(corr_matrix),
+  z = corr_matrix,
+  type = "heatmap",
+  colorscale = "YlOrRd_r",
+  zmin = min(corr_matrix),
+  zmax = max(corr_matrix),
+  text = round(corr_matrix, 2),
+  texttemplate = "%{text}",
+  textfont = list(color = "black", size = 16),
+  showscale = TRUE
+) |>
+  layout(
+    title = "Correlation Between NYC COVID-19 Cases, Hospitalizations, and Deaths",
+    xaxis = list(title = ""),
+    yaxis = list(title = "")
+  )
+```
+
+- Interpretation: The correlation matrix shows that hospitalizations and deaths are strongly related, which reflects the expected clinical progression from severe illness to mortality. Cases have only a moderate correlation with hospitalizations and a weak correlation with deaths, likely because widespread vaccination, changing testing behavior, and the milder Omicron waves reduced the proportion of cases that became severe. 
 
 
 
