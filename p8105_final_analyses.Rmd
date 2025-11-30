@@ -329,6 +329,89 @@ weather_df |>
 
 - most years had precip concentrated around December and March, while January and February vary more widely. Some winters—such as 2018, 2019, and 2022—show consistently high precipitation across all four months, whereas others like 2020 and 2025 appear drier overall.
 
+# MTA ANALYSIS
+
+#### Read in MTA data
+```{r}
+daily_mta = 
+  read.csv("data/mta.csv")
+
+monthly_mta =
+  read.csv("data/monthly_mta.csv")
+```
+
+#### Clean monthly and daily MTA datasets & join
+```{r}
+monthly_pre =
+  monthly_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      agency %in% c("Subway","MNR","LIRR","AAR","SIR") ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |>
+  filter(
+    year >= 2018,
+    year <= 2019,
+    !is.na(mode)
+  ) |>
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      mode %in% c("AAR","Subway","LIRR","MNR","SIR") ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(year >= 2020, !is.na(mode)) |> 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday")
+  )
+
+monthly_post =
+  daily_mta_clean |>
+  group_by(year, month_num, month_name, mode) |>
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |>
+  arrange(year, month_num, mode) |>
+  mutate(
+    date = as.Date(paste(year, month_num, "01", sep = "-")),
+    period = case_when(
+      year < 2020 ~ "Pre-Pandemic",
+      year == 2020 & month_num <= 2 ~ "Pre-Pandemic",
+      year == 2020 & month_num >= 3 ~ "Pandemic",
+      year == 2021 ~ "Pandemic",
+      year >= 2022 ~ "Post-Pandemic"),
+    period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
+  )
+```
 
 
 
