@@ -790,6 +790,11 @@ plotly_surge =
 plotly_surge
 ```
 
+- Summarizes how MTA ridership (bus, subway, and other modes) changed across each key COVID-19 periods, shown as a percentage of 2018 daily baseline levels.
+- Across all modes, the lock down wave produced the most dramatic decline (stay at home orders )
+- During the vaccine-rollout wave, ridership partially recovered, depending on mode. (vaccination campaigns began, restrictions eased, and more people returned to work — but overall transit use remained far below pre-pandemic levels) 
+- Although Omicron caused a spike in case counts, the city did not reinstate shutdown measures. (Workplaces, schools, and businesses remained open; vaccination rates were high; and the population’s behavioral response was less dramatic) which prolly explains why so much of ridership continued to return 
+
 
 
 
