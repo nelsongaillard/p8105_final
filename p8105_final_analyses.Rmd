@@ -520,7 +520,59 @@ recovery |>
 
 - Maybe move this down to comparative analyses?
 
+## Plotting Weekday vs. Weekend Ridership Volume during Pandemic vs Post-Pandemic
+```{r}
+pre_wknd =
+daily_mta_clean |> 
+  group_by(mode, weekend) |>
+  ungroup() |> 
+  filter(
+    year %in% c(2020,2021)
+  ) |> 
+ggplot(aes(x = weekend, y = count, fill = weekend)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.12, outlier.alpha = 0.2) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
+  labs(
+    title = "Weekday vs Weekend Ridership During Pandemic (2020–2021)",
+    x = "",
+    y = "Daily Ridership"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(size = 12)
+  )
 
+post_wknd =
+daily_mta_clean |> 
+  group_by(mode, weekend) |>
+  ungroup() |> 
+  filter(
+    year %in% c(2022,2023, 2024, 2025)
+  ) |> 
+ggplot(aes(x = weekend, y = count, fill = weekend)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.12, outlier.alpha = 0.2) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
+  labs(
+    title = "Weekday vs Weekend Ridership During Pandemic (2020–2021)",
+    x = "",
+    y = "Daily Ridership"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(size = 12)
+  )
+
+
+combined_weekend = pre_wknd / post_wknd
+combined_weekend
+```
+- Limitation: Since our pre-pandemic dataset was `monthly_mta.csv` (monthly ridership data), we are unable to pull out specific weekday/weekend. Therefore, our analysis is limited to our daily `mta.csv` dataset, which includes pandemic and onward. 
 
 
 
