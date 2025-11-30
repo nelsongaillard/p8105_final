@@ -413,7 +413,68 @@ full_mta =
   )
 ```
 
+#### Pre- vs. Post-Pandemic Modeling
+```{r}
+pre =
+full_mta |> 
+  filter(
+    period == "Pre-Pandemic"
+  ) |> 
+  ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  labs(
+    title = "Pre-Pandemic Ridership Trends (2018–Feb 2020)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
 
+pandemic =
+full_mta |> 
+  filter(
+    period == "Pandemic"
+  ) |> 
+ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1, color = "red") +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  labs(
+    title = "Pandemic Ridership Trends (2020–2021)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+post =
+full_mta |> 
+  filter(
+    period == "Post-Pandemic"
+  ) |> 
+  ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1, color = "#08519c") +
+  facet_wrap(~mode, scales = "free_y") +
+  labs(
+    title = "Post-Pandemic Ridership Trends (2022–2025)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+combined = pre / pandemic / post
+
+combined
+```
+* combined = all three graphs combined to show pre vs. pandemic vs. post
+
+- Pre pandemic: modes were 
 
 
 
