@@ -157,7 +157,7 @@ clean_covid_df |>
     annotations = lapply(1:nrow(events), function(i) {
       list(
         x = events$start[i] + (events$end[i] - events$start[i]) / 2,
-        y = 0.92,
+        y = 1.0,
         xref = "x",
         yref = "paper",
         text = events$event[i],
