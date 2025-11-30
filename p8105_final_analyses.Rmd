@@ -476,6 +476,50 @@ combined
 
 - Pre pandemic: modes were 
 
+#### Pandemic Recovery
+```{r}
+recovery =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(mode_group) |>
+  mutate(
+    baseline_2018 = mean(avg_daily_ridership[year == 2018], na.rm = TRUE),
+    pct_of_2018   = avg_daily_ridership / baseline_2018
+  ) |>
+  ungroup() |>
+  filter(date >= as.Date("2020-06-01"))
+
+
+recovery |> 
+  ggplot(aes(x = date, y = pct_of_2018, color = mode_group)) +
+    geom_smooth(se = FALSE, linewidth = 1.4) +
+    geom_hline(yintercept = 1, linetype = "dashed") +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      limits = c(0.4, 1.1)
+    ) +
+  labs(
+    title = "Ridership Recovery Relative to 2018 Baseline",
+    x = "Month",
+    y = "% of 2018 Ridership",
+    color = "Mode"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+- Maybe move this down to comparative analyses?
+
 
 
 
