@@ -1,5 +1,5 @@
 ---
-title: "Descriptive and Comparative Analyses"
+title: "Individual and Grouped Analyses"
 output: html_document
 date: "2025-11-28"
 ---
@@ -15,6 +15,7 @@ library(knitr)
 library(broom)
 knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
 ```
+# Individual Analyses 
 
 # COVID-19 ANALYSIS
 
@@ -574,7 +575,111 @@ combined_weekend
 ```
 - Limitation: Since our pre-pandemic dataset was `monthly_mta.csv` (monthly ridership data), we are unable to pull out specific weekday/weekend. Therefore, our analysis is limited to our daily `mta.csv` dataset, which includes pandemic and onward. 
 
+# Grouped Analyses 
 
+# COVID and MTA Comparison 
+
+#### MTA Ridership and Covid-19 Cases
+
+```{r}
+# Average daily MYA Ridership 
+ridership_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    avg_daily_ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ridership_plot =
+  ridership_modes |>
+  plot_ly(
+    x     = ~date,
+    y     = ~avg_daily_ridership,
+    color = ~mode_group,
+    name  = ~mode_group,
+    legendgroup = ~mode_group,
+    type  = "scatter",
+    mode  = "lines"
+  ) |>
+  layout(
+    title = list(
+      text = "NYC MTA Ridership and COVID-19 Cases",
+      x    = 0.5
+    ),
+    yaxis = list(title = "Average Daily Ridership"),
+    showlegend = TRUE
+  )
+
+#COVID Daily PLOT visulation- same as above but without viridis 
+
+covid_daily_plot =
+  clean_covid_df |>
+  plot_ly(
+    x = ~date,
+    y = ~case_count,
+    type = "scatter",
+    mode = "lines",
+    line = list(color = "firebrick", width = 0.7),
+    showlegend = FALSE   
+  ) |>
+  layout(
+    yaxis = list(
+      title = "Daily COVID-19 Cases (log scale)",
+      type  = "log"
+    ),
+    xaxis = list(title = "Date"),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.02,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+
+final_figure =
+  subplot(
+    ridership_plot,
+    covid_daily_plot,
+    nrows   = 2,
+    shareX  = TRUE,
+    titleX  = TRUE,
+    titleY  = TRUE,
+    heights = c(0.55, 0.45)
+  ) |>
+  layout(
+    height    = 550,
+    hovermode = "x unified"
+  )
+
+final_figure
+```
 
 
 
