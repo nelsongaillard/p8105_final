@@ -795,6 +795,42 @@ plotly_surge
 - During the vaccine-rollout wave, ridership partially recovered, depending on mode. (vaccination campaigns began, restrictions eased, and more people returned to work — but overall transit use remained far below pre-pandemic levels) 
 - Although Omicron caused a spike in case counts, the city did not reinstate shutdown measures. (Workplaces, schools, and businesses remained open; vaccination rates were high; and the population’s behavioral response was less dramatic) which prolly explains why so much of ridership continued to return 
 
+# Weather and MTA 
+
+#### Average Monthly Temperature and MTA Ridership
+
+```{r}
+
+monthly_weather =
+  weather_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    avg_temp = mean(average_temp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_weather_mta =
+  monthly_modes |>
+  left_join(monthly_weather, by = "date")
+
+ggplot(monthly_weather_mta,
+       aes(x = avg_temp, y = ridership, color = mode_group)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE, size = 1.2) +
+  labs(
+    title = "Relationship Between Temperature and MTA Ridership (Monthly)",
+    x = "Average Monthly Temperature (°C)",
+    y = "Ridership",
+    color = "Transit Mode"
+  ) +
+  theme_minimal(base_size = 14)
+
+
+```
+
+- Seems like weather does not have that much of an impact 
 
 
 
