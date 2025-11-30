@@ -681,5 +681,12 @@ final_figure =
 final_figure
 ```
 
+- Had to stack the graphs instead of merging becasue the scale is so different 
+- created hover so you can look at peaks and dips across both graphs 
+- had to create the covid graph instead of using the DF saved earlier beause had to get rid of viridis it was giving me issues 
+- Interpretation: Taken together, the two panels suggests that COVID-19 surges correspond with noticeable interruptions in ridership recovery / The figure highlights both the immediate impact of COVID waves and the broader, lasting transformation of mobility patterns. 
+- To examine these interruptions more directly, I'm gonna create more specific surge periods—quantifying how ridership levels shifted during each wave relative to pre-pandemic baselines and seeing which modes were most resilient across disruptions.
+
+
 
 
