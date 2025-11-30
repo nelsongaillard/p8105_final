@@ -301,8 +301,33 @@ weather_df |>
 - Across these winters, snowfall is highly variable: 2018 and 2021 stand out as the snowiest seasons // 2019, 2020, 2024, and 2025 show more moderate but still noticeable accumulation spread across one or two winter months, 2022 has relatively light snowfall, and 2023 is nearly snow-free.
 - uneven pattern highlights how NYC winters have become increasingly inconsistent
 
+#### Plot Rainfall Distribution
+```{r}
+weather_df |>
+  mutate(
+    month = month(date, label = TRUE, abbr = FALSE),
+    month = factor(month, 
+                   levels = c("December", "January", "February", "March")),
+    prcp_mm = prcp / 10
+  ) |>
+  filter(
+    month %in% c("December", "January", "February", "March")
+  ) |>
+  group_by(year, month) |>
+  summarise(total_prcp = sum(prcp_mm), .groups = "drop") |> 
+  ggplot(aes(x = month, y = total_prcp, fill = month)) +
+  geom_col(alpha = 0.8) +
+  facet_wrap(~year, ncol = 2) +
+  labs(
+    title = "NYC Monthly Precipitation (mm) by Year (2018-2025)",
+    x = "Month",
+    y = "Total Precipitation (mm)",
+    fill = ""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
-
+- most years had precip concentrated around December and March, while January and February vary more widely. Some winters—such as 2018, 2019, and 2022—show consistently high precipitation across all four months, whereas others like 2020 and 2025 appear drier overall.
 
 
 
