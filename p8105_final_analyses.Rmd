@@ -687,6 +687,109 @@ final_figure
 - Interpretation: Taken together, the two panels suggests that COVID-19 surges correspond with noticeable interruptions in ridership recovery / The figure highlights both the immediate impact of COVID waves and the broader, lasting transformation of mobility patterns. 
 - To examine these interruptions more directly, I'm gonna create more specific surge periods—quantifying how ridership levels shifted during each wave relative to pre-pandemic baselines and seeing which modes were most resilient across disruptions.
 
+#### Ridership During Key Periods Compared to 2018 
+```{r}
+monthly_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+monthly_covid =
+  clean_covid_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    monthly_cases = sum(case_count, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_joined =
+  monthly_modes |>
+  left_join(monthly_covid, by = "date")
+
+monthly_surge =
+  monthly_joined |>
+  mutate(
+    surge_period = case_when(
+      date >= as.Date("2020-03-01") & date <= as.Date("2020-06-01") ~ "Lockdown wave",
+      date >= as.Date("2020-12-01") & date <= as.Date("2021-03-01") ~ "Vaccine-rollout wave",
+      date >= as.Date("2021-12-01") & date <= as.Date("2022-02-01") ~ "Omicron surge",
+      TRUE ~ "Other months"
+    )
+  )
+
+monthly_surge_filtered =
+  monthly_surge |> 
+  filter(surge_period != "Other months") |> 
+  mutate(
+    surge_period = factor(surge_period,
+                          levels = c("Lockdown wave",
+                                     "Vaccine-rollout wave",
+                                     "Omicron surge"))
+  )
+
+baseline_2018 =
+  monthly_surge |>  
+  filter(year(date) == 2018) |>
+  group_by(mode_group) |>
+  summarise(
+    baseline_2018 = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+surge_summary =
+  monthly_surge_filtered |>
+  group_by(mode_group, surge_period) |>
+  summarise(
+    mean_ridership = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  left_join(baseline_2018, by = "mode_group") |>
+  mutate(
+    pct_of_2018 = mean_ridership / baseline_2018
+  )
+
+plotly_surge =
+  surge_summary |>
+  plot_ly(
+    x = ~surge_period,
+    y = ~pct_of_2018,
+    color = ~mode_group,
+    type = "bar",
+    hovertemplate =
+      "<b>%{x}</b><br>"    %+%
+      "Mode: %{color}<br>" %+%
+      "Ridership: %{y:.1%} of 2018<extra></extra>"
+  ) |>
+  layout(
+    barmode = "group",
+    title = list(
+      text = "MTA Ridership at Key Phases Compared to 2018 Baseline",
+      x = 0.5
+    ),
+    xaxis = list(title = "COVID Surge Period"),
+    yaxis = list(
+      title = "% of 2018 Ridership",
+      tickformat = ".0%",
+      range = c(0, max(surge_summary$pct_of_2018) * 1.15)
+    ),
+    legend = list(title = list(text = "Mode"))
+  )
+
+plotly_surge
+```
+
 
 
 
