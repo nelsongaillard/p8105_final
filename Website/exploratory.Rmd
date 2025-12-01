@@ -2,36 +2,543 @@
 title: "Exploratory Analysis"
 
 
-subtitle: "Working with the MTA, Weather, and Covid-19 data seperately"
+author: "Working with the MTA, Weather, and Covid-19 data seperately"
 
 
 output: 
   html_document:
     toc: true
     toc_float: true
-
----
-<style>
-h1.title {
-  text-align: center;
-  color: black !important;
-}
-
-
-
-h2.subtitle, .subtitle {
-  text-align: center;
-  font-size: 15px;
-  font-weight: 400;
-  color: black !important;    /* <-- forces the color */
-  margin-top: -10px;
-}
-</style>
-
-Jeff  - explain analysis of each dataset 
+    code_folding: hide
 ---
 
+On this page, we'll explore the separate data sources before combining them to analyze overall trends in MTA ridership, weather, and COVID-19 in New York City.
+
+## COVID-19 Analysis
+This section explores how COVID-19 spread across the New York City area from 2020-2025 using daily confirmed case counts, weekly averages, and hospitalizations and death. We highlight the major pandemic periods to reveal long-term patterns. 
+
+```{r setup, include=FALSE}
+library(lubridate)
+library(tidyverse)
+library(plotly)
+library(janitor)
+library(scales)
+library(knitr)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
+
+covid_df =
+read.csv("data/covid_19.csv")
+
+clean_covid_df =
+  covid_df |>
+  janitor::clean_names() |>
+  mutate(
+    date = lubridate::mdy(date_of_interest),
+    case_count = as.numeric(gsub(",", "", case_count)),
+    case_count_7day_avg = as.numeric(gsub(",", "", case_count_7day_avg)),
+    hospitalized_count = as.numeric(gsub(",", "", hospitalized_count)),
+    death_count = as.numeric(gsub(",", "", death_count))
+  ) |>
+  arrange(date)
+
+events = tibble(
+  event = c("Lockdown", "Vaccine rollout", "Omicron surge"),
+  start = as.Date(c("2020-03-15", "2020-12-14", "2021-12-01")),
+  end   = as.Date(c("2020-06-15", "2021-03-01", "2022-02-15"))
+)
+
+max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
+```
 
 
+### Daily COVID-19 Case Trends 
+Daily case trends provide the most granular view of transmission through different time periods. We visualize the data using a log scale to better highlight variation through the different periods: lockdown, vaccine rollout, and Omicron.
 
+
+```{r}
+clean_covid_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~case_count,
+    type = "scatter",
+    mode = "markers+lines",
+    marker = list(
+      color = ~case_count,
+      colorscale = "Viridis",
+      size = 5,
+      opacity = 0.8,
+      colorbar = list(title = "Daily Cases")
+    ),
+    line = list(color = "gray60", width = 0.5)
+  ) |>
+  layout(
+    title = "NYC Daily COVID-19 Cases (Log Scale)",
+    xaxis = list(
+      title = "Year",
+      range = c(as.Date("2019-01-01"), as.Date("2025-12-31"))
+    ),
+    yaxis = list(
+      title = "Daily COVID-19 Cases (log scale)",
+      type = "log"
+    ),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.03,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+```
+The log-scale plot shows NYC’s daily COVID-19 cases from 2020–2025, with darker colors indicating lower counts and bright yellow marking the highest case days. The largest spike appears during the Omicron surge, far exceeding the earlier lockdown and vaccine-rollout waves even after log transformation. After Omicron, case levels drop substantially and settle into smaller, seasonal winter increases (which is expected) through 2023–2025, indicating a sustained decline in large outbreaks.
+
+### Weekly COVID-19 Case Trends
+Weekly trends illustrate longer-term trends in transmisstion.
+
+```{r}
+clean_covid_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~case_count_7day_avg,
+    type = "scatter",
+    mode = "markers+lines",
+    marker = list(
+      color = ~case_count_7day_avg,
+      colorscale = "Viridis",
+      colorbar = list(title = "Weekly Avg Cases"),
+      size = 5,
+      opacity = 0.6
+    ),
+    line = list(
+      color = "gray50",
+      width = 0.6
+    ),
+    name = "7-day Average"
+  ) |>
+  layout(
+    title = "NYC Weekly COVID-19 Cases (7-day Average, Log Scale)",
+    xaxis = list(
+      range = c(as.Date("2019-01-01"), as.Date("2025-12-31")),
+      tickvals = as.Date(c("2019-01-01","2020-01-01","2021-01-01",
+                           "2022-01-01","2023-01-01","2024-01-01","2025-01-01")),
+      ticktext = c("2019","2020","2021","2022","2023","2024","2025"),
+      title = "Year"
+    ),
+    yaxis = list(
+      title = "7-day Average COVID-19 Cases (log scale)",
+      type = "log"
+    ),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 0.92,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+```
+
+The plot aligns with the daily case trends. After the initial lockdown period, the weekly average shows a sharp and sustained decline in cases, reflecting the immediate impact of reduced mobility and strict public health measures. A similar post–vaccine-rollout decline appears in early 2021, where cases fall noticeably, reflecting the early effects of widespread vaccination and reduced transmission.
+
+### Correlation Heat Map: Cases, Hospitalization, and Deaths
+
+Comparing cases, hospitalizations, and deaths helps identify whether surges led to severe clinical outcomes and indicate other correlations. 
+
+```{r}
+corr_matrix =
+  clean_covid_df |>
+    select(
+      Cases = case_count,
+      Hospitalizations = hospitalized_count,
+      Deaths = death_count
+    ) |>
+    cor(use = "complete.obs")
+
+plot_ly(
+  x = colnames(corr_matrix),
+  y = colnames(corr_matrix),
+  z = corr_matrix,
+  type = "heatmap",
+  colorscale = "YlOrRd_r",
+  zmin = min(corr_matrix),
+  zmax = max(corr_matrix),
+  text = round(corr_matrix, 2),
+  texttemplate = "%{text}",
+  textfont = list(color = "black", size = 16),
+  showscale = TRUE
+) |>
+  layout(
+    title = "Correlation Between NYC COVID-19 Cases, Hospitalizations, and Deaths",
+    xaxis = list(title = ""),
+    yaxis = list(title = "")
+  )
+```
+
+The correlation matrix shows that hospitalizations and deaths are strongly related, which reflects the expected clinical progression from severe illness to mortality. Cases have only a moderate correlation with hospitalizations and a weak correlation with deaths, likely because widespread vaccination, changing testing behavior, and the milder Omicron waves reduced the proportion of cases that became severe.
+
+## Weather Analysis
+This sections examines NYC weather trends from 2018-2025 using daily data from the Central Park NOAA station. The dataset includes information on temperature, precipitation, and snowfall. We utilized this information to examine how weather influences travel behavior. 
+
+```{r}
+nyc_weather =
+read.csv("data/nyc_weather.csv")
+
+weather_df =
+  nyc_weather |> 
+  janitor::clean_names() |> 
+  mutate(
+    date = as.Date(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date),
+    month = case_match(month,
+                       1 ~ "January",
+                       2 ~ "February",
+                       3 ~ "March", 
+                       4 ~ "April",
+                       5 ~ "May",
+                       6 ~ "June",
+                       7 ~ "July",
+                       8 ~ "August",
+                       9 ~ "September", 
+                       10 ~ "October",
+                       11 ~ "November",
+                       12 ~ "December"
+    ),
+    tmin_c = tmin / 10,
+    tmax_c = tmax / 10,
+    average_temp = (tmin_c + tmax_c) / 2,
+  ) |> 
+  filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
+```
+
+### Average Temperature by Year
+An analysis showing average temperatures throughout years 2018-2025 to understand patterns. 
+
+```{r}
+weather_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~average_temp,
+    type = "scatter",
+    mode = "markers",
+    marker = list(
+      color = ~average_temp,
+      colorscale = "Viridis",
+      colorbar = list(title = "Temperature (°C)"),
+      size = 5,
+      opacity = 0.7
+    )
+) |>
+  layout(
+    title = "NYC Average Temperature by Year (2018-2025)",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "Average Temperature (°C)")
+  )
+```
+The plot shows a clear and consistent seasonal pattern in NYC temperatures, with cold winters (often below 0°C) and warm summers that regularly exceed 25–30°C.
+
+### Snow Distribution by Year
+Snowfall varies drastically from year to year in NYC. Since most snowfall occurs between December and March, we focus on these winter months to compare monthly snowfall. 
+
+```{r}
+weather_df |>
+  mutate(
+    month = month(date, label = TRUE, abbr = FALSE),
+    month = factor(month, 
+                   levels = c("December", "January", "February", "March"))
+  ) |>
+  filter(
+    snow > 0,
+    month %in% c("December", "January", "February", "March")
+  ) |>
+  group_by(year, month) |>
+  summarise(total_snow = sum(snow), .groups = "drop") |> 
+  ggplot(aes(x = month, y = total_snow, fill = month)) +
+  geom_col(alpha = 0.8) +
+  facet_wrap(~year, ncol = 2) +
+  labs(
+    title = "NYC Monthly Snowfall (mm) by Year (2018-2025)",
+    x = "Month",
+    y = "Total Snowfall (mm)",
+    fill = ""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+Across these winters, snowfall is highly variable: 2018 and 2021 stand out as the snowiest seasons // 2019, 2020, 2024, and 2025 show more moderate but still noticeable accumulation spread across one or two winter months, 2022 has relatively light snowfall, and 2023 is nearly snow-free. Overall, the uneven pattern highlights how nYC winters have become increasingly inconsistent. 
+
+### Rainfall Distribution
+Beyond snow, winter precipitation also shapes mobility and service disruptions. Once again, we focus on December-March to capture primary cold-weather precipitation months. 
+
+```{r}
+weather_df |>
+  mutate(
+    month = month(date, label = TRUE, abbr = FALSE),
+    month = factor(month, 
+                   levels = c("December", "January", "February", "March")),
+    prcp_mm = prcp / 10
+  ) |>
+  filter(
+    month %in% c("December", "January", "February", "March")
+  ) |>
+  group_by(year, month) |>
+  summarise(total_prcp = sum(prcp_mm), .groups = "drop") |> 
+  ggplot(aes(x = month, y = total_prcp, fill = month)) +
+  geom_col(alpha = 0.8) +
+  facet_wrap(~year, ncol = 2) +
+  labs(
+    title = "NYC Monthly Precipitation (mm) by Year (2018-2025)",
+    x = "Month",
+    y = "Total Precipitation (mm)",
+    fill = ""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters—such as 2018, 2019, and 2022—show consistently high precipitation across all four months, whereas others like 2020 and 2025 appear drier overall.
+
+## MTA Analysis 
+This section examines ridership trends across teh MTA's major transit modes. We combine monthly pre-pandemic data with daily pandemic data to create a long-term dataset that reflects how mobility is affected during COVID-19. 
+
+```{r}
+library(lubridate)
+library(tidyverse)
+library(plotly)
+library(janitor)
+library(scales)
+library(knitr)
+library(patchwork)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
+
+daily_mta = 
+  read.csv("data/mta.csv")
+
+monthly_mta =
+  read.csv("data/monthly_mta.csv")
+
+monthly_pre =
+  monthly_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      agency %in% c("Subway","MNR","LIRR","AAR","SIR") ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |>
+  filter(
+    year >= 2018,
+    year <= 2019,
+    !is.na(mode)
+  ) |>
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      mode %in% c("AAR","Subway","LIRR","MNR","SIR") ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(year >= 2020, !is.na(mode)) |> 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday")
+  )
+
+monthly_post =
+  daily_mta_clean |>
+  group_by(year, month_num, month_name, mode) |>
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |>
+  arrange(year, month_num, mode) |>
+  mutate(
+    date = as.Date(paste(year, month_num, "01", sep = "-")),
+    period = case_when(
+      year < 2020 ~ "Pre-Pandemic",
+      year == 2020 & month_num <= 2 ~ "Pre-Pandemic",
+      year == 2020 & month_num >= 3 ~ "Pandemic",
+      year == 2021 ~ "Pandemic",
+      year >= 2022 ~ "Post-Pandemic"),
+    period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
+  )
+```
+
+### Pre vs. Post-Pandemic Modeling
+We compare ridership patterns across three periods (pre, during, and post- pandemic). Each panel highlights how ridership functioned throughout COVID-19.
+
+```{r}
+pre =
+full_mta |> 
+  filter(
+    period == "Pre-Pandemic"
+  ) |> 
+  ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  labs(
+    title = "Pre-Pandemic Ridership Trends (2018–Feb 2020)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+pandemic =
+full_mta |> 
+  filter(
+    period == "Pandemic"
+  ) |> 
+ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1, color = "red") +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  labs(
+    title = "Pandemic Ridership Trends (2020–2021)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+post =
+full_mta |> 
+  filter(
+    period == "Post-Pandemic"
+  ) |> 
+  ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1, color = "#08519c") +
+  facet_wrap(~mode, scales = "free_y") +
+  labs(
+    title = "Post-Pandemic Ridership Trends (2022–2025)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+combined = pre / pandemic / post
+
+combined
+```
+Before COVID-19, ridership had predictable seasonal patterns. However, in March 20202, ridership collapsed across the system with subways and commuter rail experiencing the most dramatic declines. From 2022 onwards, ridership seems to recover at different paces based on mode. Buses seemed to have recovered quicker while commuter rail remains below pre-pandemic baseline possibly due to more remote work and reduced commuting.  
+
+### Weekday vs Weekend Ridership Volume During and Post-Pandemic
+This comparison highlights changes in commuting through different parts of the week during and post-pandemic. 
+
+```{r, warning=FALSE, message=FALSE}
+pre_wknd =
+daily_mta_clean |> 
+  group_by(mode, weekend) |>
+  ungroup() |> 
+  filter(
+    year %in% c(2020,2021)
+  ) |> 
+ggplot(aes(x = weekend, y = count, fill = weekend)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.12, outlier.alpha = 0.2) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
+  labs(
+    title = "Weekday vs Weekend Ridership During Pandemic (2020–2021)",
+    x = "",
+    y = "Daily Ridership"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(size = 12)
+  )
+
+post_wknd =
+daily_mta_clean |> 
+  group_by(mode, weekend) |>
+  ungroup() |> 
+  filter(
+    year %in% c(2022,2023, 2024, 2025)
+  ) |> 
+ggplot(aes(x = weekend, y = count, fill = weekend)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.12, outlier.alpha = 0.2) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
+  labs(
+    title = "Weekday vs Weekend Ridership During Pandemic (2020–2021)",
+    x = "",
+    y = "Daily Ridership"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(size = 12)
+  )
+
+
+combined_weekend = pre_wknd / post_wknd
+combined_weekend
+```
+
+During 2020-2021 (COVID-19), weekday ridership collapses due to restrictions and remote work more than weekend ridership. After 2022, when COVID-19 was declining, weekend ridership rebounds more quickly than weekday especially for the Subway. This may be commuting for leisure-oriented activities rather than work. 
 
