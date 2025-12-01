@@ -47,7 +47,7 @@ knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
 
 ## COVID-19 ANALYSIS
 
-We pulled COVID-19 data is from opendata.cityofnewyork.us, a site consisting of open data sources about various topics affecting New York City boroughs. 
+COVID-19 data was pulled from opendata.cityofnewyork.us, a site consisting of open data sources about various topics affecting New York City boroughs. 
 
 #### Reading in the covid datafile.
 ```{r}
@@ -83,7 +83,7 @@ events = tibble(
 max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
 ```
 
-Important events pertaining to the COVID-19 pandemic were highlighted in a new dataframe `events`, marking the start date and end date of `Lockdown`, `Vaccine rollout`, and `Omicron surge`, respectively. 
+Important events pertaining to the COVID-19 pandemic were highlighted in a new dataframe `events`, marking the estimated start date and estimated end date of `Lockdown`, `Vaccine rollout`, and `Omicron surge`, respectively. 
 
 #### Plotting the daily COVID-19 cases by Year
 ```{r}
@@ -245,17 +245,17 @@ To visualize associations between COVID-19 cases, hospitalizations, and deaths, 
 
 The matrix shows that hospitalizations and deaths are strongly correlated, which reflects the expected clinical progression from severe illness to mortality. Cases have a moderate correlation with hospitalizations and a weak corelation with deaths, likely due to widespread vaccination, changes in testing behavior, and milder Omicron waves that reduced the proportion of severe cases.
 
-# WEATHER ANALYSIS
+## WEATHER ANALYSIS
+
+Weather data was pulled from ncei.noaa.gov, a site consisting of open data sources regarding weather patterns across the United States. Since weather is measured from multiple sites throughout NYC, Central Park was used as a proxy for all of NYC.
 
 #### Reading in weather data
-
 ```{r}
 nyc_weather =
 read.csv("data/nyc_weather.csv")
 ```
 
 #### Cleaning up weather data
-
 ```{r}
 weather_df =
   nyc_weather |> 
@@ -285,10 +285,9 @@ weather_df =
   filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
 ```
 
-- this data set stores temperature as tenths of degrees celcius so we had to fix that (ie 250 --> actually 25C) // Used central park as proxy 
+After weather data was loaded, the `date` variable was coded as a date, and the year and month were extracted such that the month name replaced the month number. This process makes faceting and labeling easier when developing plots. Additionally, originally, the data was stored in the data set as tenths of degrees Celsius (e.g. 250 -> 25°C), so `tmin_c` and `tmax_c` were created to showcase the accurate temperature in degrees Celsius. The average temperature (`average_temp`) was calculated by taking the mean of `tmin_c` and `tmax_c`. Lastly, the data was restricted to include only years of interest: 2018 to 2025.
 
 #### Plot Average Temperature by Year
-
 ```{r}
 weather_df |> 
   plot_ly(
@@ -311,7 +310,7 @@ weather_df |>
   )
 ```
 
-- The plot shows a clear and consistent seasonal pattern in NYC temperatures, with cold winters (often below 0°C) and warm summers that regularly exceed 25–30°C. 
+`Average Temperature (°C)` was plotted from 2018 to 2025. This plot shows a clear and consistent seasonal pattern in NYC temperatures (using Central Park as a proxy), with colder winters (often with temperatures below 0°C) and warm summers that regularly exceed 25-30°C. 
 
 #### Plot Snow Distribution by Year
 ```{r}
@@ -339,9 +338,9 @@ weather_df |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-- NYC snowfall is charted only for December through March because these four winter months account for virtually all measurable snowfall, making the analysis more meaningful. 
-- Across these winters, snowfall is highly variable: 2018 and 2021 stand out as the snowiest seasons // 2019, 2020, 2024, and 2025 show more moderate but still noticeable accumulation spread across one or two winter months, 2022 has relatively light snowfall, and 2023 is nearly snow-free.
-- uneven pattern highlights how NYC winters have become increasingly inconsistent
+`Total Snowfall (mm)` by year was also plotted, however NYC snowfall is charted only for December through March because these four winter months account for virtually all measurable snowfall, thus making the analysis more meaningful.
+
+Across these winters, snowfall is highly variable. 2018 and 2021 stand out as having the snowiest winters. 2019, 2020, 2024, and 2025 show more moderate (but still noticeable) snow accumulation spread across one or two winter months. 2022 has relatively light snowfall, and 2023 is nearly snowfall-free. The discrepancy in snowfall consistency highlights how NYC winters have become increasingly inconsistent. 
 
 #### Plot Rainfall Distribution
 ```{r}
@@ -369,7 +368,9 @@ weather_df |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-- most years had precip concentrated around December and March, while January and February vary more widely. Some winters—such as 2018, 2019, and 2022—show consistently high precipitation across all four months, whereas others like 2020 and 2025 appear drier overall.
+Similarly, `Total Precipitation (mm)` (i.e. rainfall) by year was plotted.
+
+Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters--such as 2018, 2019, and 2020--depict consistently high precipitation across all four months, whereas other years like 2020 and 2025 appear drier overall.
 
 # MTA ANALYSIS
 
