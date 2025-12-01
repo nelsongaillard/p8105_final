@@ -1,0 +1,66 @@
+---
+title: "Data Processing" 
+
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## **MTA Daily Ridership Data (2020–2025)**
+
+The MTA Daily Ridership dataset provides information on passengers across different MTA transit modes:subway, buses, LIRR, Metro-North, Access-A-Ride, and Staten Island Railway. The dataset begins during the COVID-19 pandemic to allow the public to track real-time changes in transit usage.
+
+### Variables 
+<div class="var-list">
+• `Date`: Date of travel  
+• `Mode`: Transit mode  
+• `Count`: Daily ridership count  
+</div>
+
+### Data-Cleaning
+To create a clean dataset, column names were standardized and the data field was converted to a proper `Date` format. Ridership counts were originally stored as character strings with commas, so these were parsed into numeric values. Becuase there were several versions of the same transit mode, all bus-related categories were collapsed into a single "Bus" mode and other similar standardization was done for rail services. Additional variables were created to capture the year, month, weekday, and weekend indicators. Only records from 2020 onward were kept, reflecting the period when daily reporting became consistent during the pandemic. 
+
+## **MTA Pre-COVID Monthly Ridership Data (2008–2019)**
+
+The MTA monthly ridership data reports monthly ridership totals for major MTA services from 2008-2019, representing pre-pandemic transit patterns. This data establishes a baseline on ridership activity to later understand changes during the pandemic. 
+
+### Variables 
+<div class="var-list">
+• `Month`: Month of travel  
+• `Agency`:  Transit mode  
+• `Ridership`:  Monthly total ridership  
+</div>
+
+### Data-Cleaning
+For the pre-COVID period, monthly MTA dataset was cleaned by converting `Month` field into a date format (year,month number, and month name). Monthly ridership totals were stored as text and required conversion to numeric form. To make these monthly values comparable to the daily dataset, an average daily ridership variable was calculated by dividing each month's total by the number of days in the month. Transit mode labels were standardized to match those in the daily dataset and the data was filtered to include only 2018 and 2018 so that the pre-pandemic baseline was created.
+
+## **NYC COVID-19 Daily Case Counts (2020-2025)**
+
+The COVID-19 dataset contains daily count of confirmed COVID-19 cases, hospitalizations, and deaths across New York City. These data track the trajectory of NYC's major waves: initial lock down, winter surge, variants Delta, and Omicron allowing us to identify periods of rapid transmission and compare them to changes in transit behavior. 
+
+### Variables 
+<div class="var-list">
+• `Date`: Date of report  
+• `Case_Count`: Daily new case counts  
+• `Hospitalized_Count`: Daily hospitalizations and death counts  
+• `7_DAY_AVG`: Seven-day rolling averages  
+</div>
+
+### Data-Cleaning
+The COVID-19 dataset contained many inconsistencies due to reporting variability across the pandemic. Columns names were cleaned, and date field was converted to a proper format. Using `gsub()`, many of the case, hospitalization, and death counts were cleaned to remove formatting and then convert to numeric form. A set of key pandemic periods: lock down, vaccine roll out, and the Omicron surge, was defined to support later interpretation. The cleaned dataset provides both daily cases and seven-day averages. 
+
+## **NOAA Weather Data- Central Park (2018-2025)**
+
+The NOAA Daily Summaries dataset provides daily meteorological observations collected at Central Park, NYC's primary long-term weather station. Because temperature, precipitation, and snow influence travel behavior and transit operations, this dataset is used to evaluate how weather patterns shape seasonal ridership and interact with pandemic-related changes. 
+
+### Variables 
+<div class="var-list">
+• `Date`: Date of report  
+• `Snow` and `PRCP`: Precipitation and snowfall amounts  
+• `Snow_attributes`: Snow depth  
+</div>
+
+### Data-Cleaning
+The weather dataset required unit conversion and date standardization before analysis. After cleaning the column names, data field was converted to proper format and year and month values were extracted. NOAA records temperatures, precipitation, and snow in tenths of their actual units, so min and max temperatures were converted to degrees Celsius by dividing by ten. Precipitation and snow were also transformed into millimeters. An average daily temperature variable was added to represent overall warmth or coldness and data was restricted to years 2018-2025 to match span of MTA and COVID datasets. 
+

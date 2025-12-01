@@ -1,0 +1,56 @@
+---
+title: "Riding Out the Storm: MTA Ridership Through COVID and Weather"
+
+
+subtitle: "Jeff Remo, Jonathan Huynh, Mahitha Jangeti (mj3229), Nelson Gaillard, Matariya Rattanapan (mkr2158)"
+
+
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+
+---
+<style>
+h1.title {
+  text-align: center;
+  color: black !important;
+}
+
+h2.subtitle, .subtitle {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 400;
+  color: black !important;    /* <-- forces the color */
+  margin-top: -10px;
+}
+</style>
+---
+
+
+![](images/mta.jpg)
+
+
+## About
+
+The Metropolitan Transportation Authority (MTA), founded in 1968, operates the subway, bus, and commuter rail systems, as well as tolled bridges and tunnels across the New York City metropolitan area. Serving more than 3 million riders each day, the MTA is a cornerstone of transportation and daily life. Ridership levels shift over time in response to seasons, holidays, major events, and broader disruptions such as the COVID-19 pandemic. In this website, we take a closer look at how these patterns change and what they reveal about the city’s movement.
+
+## Our Project
+
+The COVID-19 pandemic fundamentally altered patterns of public transit use, exposing the sensitivity of urban mobility to both public-health and environmental conditions. Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, and how long recovery took across time and boroughs. Such insights can guide policy around public health preparedness, transit safety, and infrastructure planning under climate variability. Keep scrolling to learn more of these trends in depth!
+
+
+## Data Sources
+
+[MTA Daily Ridership Data: 2020-2025](https://data.ny.gov/Transportation/MTA-Daily-Ridership-Data-2020-2025/vxuj-8kew/about_data)
+
+[Pre-COVID MTA Monthly Ridership Data](https://data.ny.gov/Transportation/MTA-Monthly-Ridership-Traffic-Data-Beginning-Janua/xfre-bxip/about_data)
+
+[COVID-19 Case Data for NYC](https://data.cityofnewyork.us/Health/COVID-19-Daily-Counts-of-Cases-Hospitalizations-an/rc75-m7u3/about_data)
+
+[NOAA Weather Data-NYC Central Park](https://www.ncei.noaa.gov/access/search/data-search/daily-summaries?stations=USW00094728)
+
+A closer look at the
+[MTA Map](https://www.mta.info/map/5256)
+
+

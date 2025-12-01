@@ -1,0 +1,30 @@
+---
+title: "Riding Out the Storm: MTA Ridership Through COVID and Weather Report"
+
+
+subtitle: "."
+
+
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+
+---
+<style>
+h1.title {
+  text-align: center;
+  color: black !important;
+}
+
+h2.subtitle, .subtitle {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 400;
+  color: black !important;    /* <-- forces the color */
+  margin-top: -10px;
+}
+</style>
+---
+
+

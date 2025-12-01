@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Data Processing</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Home</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="data.html">Data Processing</a>
+</li>
+<li>
+  <a href="exploratory.html">Exploratory Analysis</a>
+</li>
+<li>
+  <a href="combined.html">Combined-Data Analysis</a>
+</li>
+<li>
+  <a href="dashboard.html">Ridership Dashboard</a>
+</li>
+<li>
+  <a href="report.html">Report</a>
+</li>
+<li>
+  <a href="https://github.com/mj3229/mjangeti.github.io">
+    <span class="fa fa-github fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Data Processing</h1>
+
+</div>
+
+
+<div id="mta-daily-ridership-data-20202025" class="section level2">
+<h2><strong>MTA Daily Ridership Data (2020–2025)</strong></h2>
+<p>The MTA Daily Ridership dataset provides information on passengers
+across different MTA transit modes:subway, buses, LIRR, Metro-North,
+Access-A-Ride, and Staten Island Railway. The dataset begins during the
+COVID-19 pandemic to allow the public to track real-time changes in
+transit usage.</p>
+<div id="variables" class="section level3">
+<h3>Variables</h3>
+<div class="var-list">
+<p>• <code>Date</code>: Date of travel<br />
+• <code>Mode</code>: Transit mode<br />
+• <code>Count</code>: Daily ridership count</p>
+</div>
+</div>
+<div id="data-cleaning" class="section level3">
+<h3>Data-Cleaning</h3>
+<p>To create a clean dataset, column names were standardized and the
+data field was converted to a proper <code>Date</code> format. Ridership
+counts were originally stored as character strings with commas, so these
+were parsed into numeric values. Becuase there were several versions of
+the same transit mode, all bus-related categories were collapsed into a
+single “Bus” mode and other similar standardization was done for rail
+services. Additional variables were created to capture the year, month,
+weekday, and weekend indicators. Only records from 2020 onward were
+kept, reflecting the period when daily reporting became consistent
+during the pandemic.</p>
+</div>
+</div>
+<div id="mta-pre-covid-monthly-ridership-data-20082019"
+class="section level2">
+<h2><strong>MTA Pre-COVID Monthly Ridership Data
+(2008–2019)</strong></h2>
+<p>The MTA monthly ridership data reports monthly ridership totals for
+major MTA services from 2008-2019, representing pre-pandemic transit
+patterns. This data establishes a baseline on ridership activity to
+later understand changes during the pandemic.</p>
+<div id="variables-1" class="section level3">
+<h3>Variables</h3>
+<div class="var-list">
+<p>• <code>Month</code>: Month of travel<br />
+• <code>Agency</code>: Transit mode<br />
+• <code>Ridership</code>: Monthly total ridership</p>
+</div>
+</div>
+<div id="data-cleaning-1" class="section level3">
+<h3>Data-Cleaning</h3>
+<p>For the pre-COVID period, monthly MTA dataset was cleaned by
+converting <code>Month</code> field into a date format (year,month
+number, and month name). Monthly ridership totals were stored as text
+and required conversion to numeric form. To make these monthly values
+comparable to the daily dataset, an average daily ridership variable was
+calculated by dividing each month’s total by the number of days in the
+month. Transit mode labels were standardized to match those in the daily
+dataset and the data was filtered to include only 2018 and 2018 so that
+the pre-pandemic baseline was created.</p>
+</div>
+</div>
+<div id="nyc-covid-19-daily-case-counts-2020-2025"
+class="section level2">
+<h2><strong>NYC COVID-19 Daily Case Counts (2020-2025)</strong></h2>
+<p>The COVID-19 dataset contains daily count of confirmed COVID-19
+cases, hospitalizations, and deaths across New York City. These data
+track the trajectory of NYC’s major waves: initial lock down, winter
+surge, variants Delta, and Omicron allowing us to identify periods of
+rapid transmission and compare them to changes in transit behavior.</p>
+<div id="variables-2" class="section level3">
+<h3>Variables</h3>
+<div class="var-list">
+<p>• <code>Date</code>: Date of report<br />
+• <code>Case_Count</code>: Daily new case counts<br />
+• <code>Hospitalized_Count</code>: Daily hospitalizations and death
+counts<br />
+• <code>7_DAY_AVG</code>: Seven-day rolling averages</p>
+</div>
+</div>
+<div id="data-cleaning-2" class="section level3">
+<h3>Data-Cleaning</h3>
+<p>The COVID-19 dataset contained many inconsistencies due to reporting
+variability across the pandemic. Columns names were cleaned, and date
+field was converted to a proper format. Using <code>gsub()</code>, many
+of the case, hospitalization, and death counts were cleaned to remove
+formatting and then convert to numeric form. A set of key pandemic
+periods: lock down, vaccine roll out, and the Omicron surge, was defined
+to support later interpretation. The cleaned dataset provides both daily
+cases and seven-day averages.</p>
+</div>
+</div>
+<div id="noaa-weather-data--central-park-2018-2025"
+class="section level2">
+<h2><strong>NOAA Weather Data- Central Park (2018-2025)</strong></h2>
+<p>The NOAA Daily Summaries dataset provides daily meteorological
+observations collected at Central Park, NYC’s primary long-term weather
+station. Because temperature, precipitation, and snow influence travel
+behavior and transit operations, this dataset is used to evaluate how
+weather patterns shape seasonal ridership and interact with
+pandemic-related changes.</p>
+<div id="variables-3" class="section level3">
+<h3>Variables</h3>
+<div class="var-list">
+<p>• <code>Date</code>: Date of report<br />
+• <code>Snow</code> and <code>PRCP</code>: Precipitation and snowfall
+amounts<br />
+• <code>Snow_attributes</code>: Snow depth</p>
+</div>
+</div>
+<div id="data-cleaning-3" class="section level3">
+<h3>Data-Cleaning</h3>
+<p>The weather dataset required unit conversion and date standardization
+before analysis. After cleaning the column names, data field was
+converted to proper format and year and month values were extracted.
+NOAA records temperatures, precipitation, and snow in tenths of their
+actual units, so min and max temperatures were converted to degrees
+Celsius by dividing by ten. Precipitation and snow were also transformed
+into millimeters. An average daily temperature variable was added to
+represent overall warmth or coldness and data was restricted to years
+2018-2025 to match span of MTA and COVID datasets.</p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

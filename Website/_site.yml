@@ -1,0 +1,20 @@
+name: "Yay internet!"
+output_dir: "."
+navbar:
+  title: "Home"
+  right:
+    - text: "Data Processing"
+      href: data.html
+    - text: "Exploratory Analysis"
+      href: exploratory.html
+    - text: "Combined-Data Analysis"
+      href: combined.html
+    - text: "Ridership Dashboard"
+      href: dashboard.html
+    - text: "Report"
+      href: report.html
+    - icon: fa-github fa-lg
+      href: https://github.com/mj3229/mjangeti.github.io
+output:
+  html_document:
+    theme: flatly
