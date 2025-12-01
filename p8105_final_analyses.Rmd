@@ -1,30 +1,8 @@
 ---
-title: "The Effects of Weather Patterns on MTA Transit Behavior in New York City"
+title: "Individual and Grouped Analyses"
 output: html_document
-date: "December 6, 2025"
+date: "2025-11-28"
 ---
-
-Jefferson Remo (jr4550),
-Jonathan Huynh (jkh2157),
-Nelson Gaillard (ng3005),
-Mahitha Jangeti (mj3229),
-Matariya Rattanapan (mkr2158)
-
-# Motivation
-
-The COVID-19 pandemic altered patterns of public transit use, exposing the sensitivity of urban mobility to both public-health and environmental conditions. Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, and how long recovery took across time and boroughs. These insights can guide policy around public health preparedness, transit safety, and infrastructure planning under climate variability.
-
-# Related Work
-
-# Initial Questions
-
-# Data: Source, Scraping, Cleaning, etc
-
-# Exploratory Analyses
-
-# Additional Analyses
-
-# Discussion
 
 ```{r setup, include=FALSE}
 library(lubridate)
@@ -37,20 +15,16 @@ library(knitr)
 library(broom)
 knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
 ```
-
 # Individual Analyses 
 
 # COVID-19 ANALYSIS
 
 #### Reading in the covid datafile.
-
 ```{r}
 covid_df =
 read.csv("data/covid_19.csv")
 ```
-
 #### Separating the date variable into month, day, and year + arranging
-
 ```{r}
 clean_covid_df =
   covid_df |>
@@ -64,9 +38,7 @@ clean_covid_df =
   ) |>
   arrange(date)
 ```
-
 #### Marking events for lockdown, rollout of vaccine, and the surge of omicron
-
 ```{r}
 events = tibble(
   event = c("Lockdown", "Vaccine rollout", "Omicron surge"),
@@ -76,9 +48,7 @@ events = tibble(
 
 max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
 ```
-
 #### Plotting the daily COVID-19 cases by Year
-
 ```{r}
 clean_covid_df |> 
   plot_ly(
@@ -137,7 +107,6 @@ clean_covid_df |>
 - Interpretation: The log-scale plot shows NYC’s daily COVID-19 cases from 2020–2025, with darker colors indicating lower counts and bright yellow marking the highest case days. The largest spike appears during the Omicron surge, far exceeding the earlier lockdown and vaccine-rollout waves even after log transformation. After Omicron, case levels drop substantially and settle into smaller, seasonal winter increases (which is expected) through 2023–2025, indicating a sustained decline in large outbreaks.
 
 #### Plot Weekly COVID-19 Cases by Year
-
 ```{r}
 clean_covid_df |> 
   plot_ly(
@@ -203,7 +172,6 @@ clean_covid_df |>
 - This again aligns with what we saw in the previous graph 
 
 #### Correlation Heat Map of Cases, Hospitalization, and Deaths
-
 ```{r}
 corr_matrix =
   clean_covid_df |>
@@ -305,7 +273,6 @@ weather_df |>
 - The plot shows a clear and consistent seasonal pattern in NYC temperatures, with cold winters (often below 0°C) and warm summers that regularly exceed 25–30°C. 
 
 #### Plot Snow Distribution by Year
-
 ```{r}
 weather_df |>
   mutate(
@@ -336,7 +303,6 @@ weather_df |>
 - uneven pattern highlights how NYC winters have become increasingly inconsistent
 
 #### Plot Rainfall Distribution
-
 ```{r}
 weather_df |>
   mutate(
@@ -367,7 +333,6 @@ weather_df |>
 # MTA ANALYSIS
 
 #### Read in MTA data
-
 ```{r}
 daily_mta = 
   read.csv("data/mta.csv")
@@ -377,7 +342,6 @@ monthly_mta =
 ```
 
 #### Clean monthly and daily MTA datasets & join
-
 ```{r}
 monthly_pre =
   monthly_mta |>
@@ -451,7 +415,6 @@ full_mta =
 ```
 
 #### Pre- vs. Post-Pandemic Modeling
-
 ```{r}
 pre =
 full_mta |> 
@@ -515,7 +478,6 @@ combined
 - Pre pandemic: modes were 
 
 #### Pandemic Recovery
-
 ```{r}
 recovery =
   full_mta |>
@@ -560,7 +522,6 @@ recovery |>
 - Maybe move this down to comparative analyses?
 
 ## Plotting Weekday vs. Weekend Ridership Volume during Pandemic vs Post-Pandemic
-
 ```{r}
 pre_wknd =
 daily_mta_clean |> 
@@ -727,7 +688,6 @@ final_figure
 - To examine these interruptions more directly, I'm gonna create more specific surge periods—quantifying how ridership levels shifted during each wave relative to pre-pandemic baselines and seeing which modes were most resilient across disruptions.
 
 #### Ridership During Key Periods Compared to 2018 
-
 ```{r}
 monthly_modes =
   full_mta |>
@@ -871,6 +831,76 @@ ggplot(monthly_weather_mta,
 ```
 
 - Seems like weather does not have that much of an impact 
+
+#### Extreme weather conditions (% Change compared to normal ridership days)
+
+```{r}
+weather_clean =
+  weather_df |>
+  mutate(
+    avg_temp_c = average_temp,
+    tmax_c,
+    prcp_mm = prcp/10,    
+    snow_mm = snow
+  ) |>
+  select(date, avg_temp_c, tmax_c, prcp_mm, snow_mm)
+
+# defining the limits for extreme weather 
+weather_extreme =
+  weather_clean |>
+  mutate(
+    extreme =
+      tmax_c >= 32.2 |     
+      prcp_mm >= 25.4 |    
+      snow_mm >= 127      
+  ) |>
+  select(date, extreme)
+
+ridership_weather =
+  ridership_modes |>
+  left_join(weather_extreme, by = "date") |>
+  mutate(extreme = replace_na(extreme, FALSE))
+
+#computing percent change 
+extreme_summary =
+  ridership_weather |>
+  group_by(mode_group, extreme) |>
+  summarise(
+    mean_ridership = mean(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop_last"
+  ) |>
+  summarise(
+    pct_drop =
+      (mean_ridership[extreme == TRUE] -
+       mean_ridership[extreme == FALSE]) /
+       mean_ridership[extreme == FALSE],
+    .groups = "drop"
+  )
+
+#plot 
+extreme_plot =
+  ggplot(extreme_summary,
+         aes(x = mode_group, y = pct_drop, fill = mode_group)) +
+  geom_col(width = 0.7, show.legend = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(values = c(
+    "Bus"    = "#1b9e77",
+    "Other"  = "#d95f02",
+    "Subway" = "#7570b3"
+  )) +
+  labs(
+    title = "Percent Change in Ridership on Extreme Weather Days",
+    x = "Mode",
+    y = "% Change (Extreme vs Normal)"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(plot.title = element_text(face = "bold"))
+
+extreme_plot
+```
+
+
+
 
 
 
