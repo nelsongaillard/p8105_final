@@ -922,6 +922,62 @@ extreme_plot =
 extreme_plot
 ```
 
+# MTA x WEATHER x COVID Analysis- Linear Regression 
+
+```{r}
+monthly_all =
+  monthly_joined |>      
+  # Replaced missing COVID values with 0 (pre-pandemic months)
+  mutate(monthly_cases = ifelse(is.na(monthly_cases), 0, monthly_cases)) |>
+  
+  left_join(
+    weather_df |>
+      mutate(month = as.Date(cut(date, "month"))) |>
+      group_by(month) |>
+      summarise(avg_temp = mean(average_temp, na.rm = TRUE),
+                .groups = "drop") |>
+      rename(date = month),
+    by = "date"
+  )
+
+#Linear Model 
+model_results =
+  monthly_all |>
+  group_by(mode_group) |>
+  do(tidy(lm(ridership ~ avg_temp + monthly_cases, data = .)))
+
+model_clean =
+  model_results |>
+  mutate(
+    term = recode(
+      term,
+      "(Intercept)" = "Intercept",
+      "avg_temp" = "Average Temperature (°C)",
+      "monthly_cases" = "Monthly COVID-19 Cases"
+    ),
+    estimate  = round(estimate, 1),
+    std.error = round(std.error, 1),
+    statistic = round(statistic, 2),
+    p.value   = signif(p.value, 3)
+  ) |>
+  arrange(mode_group, term)
+
+# Making table look nicer 
+model_clean |>
+  rename(
+    Term = term,
+    Estimate = estimate,
+    `Std. Error` = std.error,
+    `t value` = statistic,
+    `p value` = p.value
+  ) |>
+  arrange(mode_group, Term) |>
+  kable(
+    caption = "Linear Models: Effect of Temperature and COVID-19 Cases on Ridership",
+    digits = 3
+  )
+
+```
 
 
 
