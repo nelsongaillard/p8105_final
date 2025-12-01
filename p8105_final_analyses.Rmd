@@ -18,10 +18,6 @@ The COVID-19 pandemic altered patterns of public transit use, exposing the sensi
 
 ## Initial Questions
 
-
-
-
-
 ## Exploratory Analyses
 
 ## Additional Analyses
@@ -43,9 +39,9 @@ knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
 
 # Data: Source, Scraping, Cleaning, etc
 
-## Individual Analyses 
+## Exploratory Analyses
 
-## COVID-19 ANALYSIS
+### COVID-19 Analysis
 
 COVID-19 data was pulled from opendata.cityofnewyork.us, a site consisting of open data sources about various topics affecting New York City boroughs. 
 
@@ -245,7 +241,7 @@ To visualize associations between COVID-19 cases, hospitalizations, and deaths, 
 
 The matrix shows that hospitalizations and deaths are strongly correlated, which reflects the expected clinical progression from severe illness to mortality. Cases have a moderate correlation with hospitalizations and a weak corelation with deaths, likely due to widespread vaccination, changes in testing behavior, and milder Omicron waves that reduced the proportion of severe cases.
 
-## WEATHER ANALYSIS
+### Weather Analysis
 
 Weather data was pulled from ncei.noaa.gov, a site consisting of open data sources regarding weather patterns across the United States. Since weather is measured from multiple sites throughout NYC, Central Park was used as a proxy for all of NYC.
 
@@ -372,7 +368,7 @@ Similarly, `Total Precipitation (mm)` (i.e. rainfall) by year was plotted.
 
 Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters--such as 2018, 2019, and 2020--depict consistently high precipitation across all four months, whereas other years like 2020 and 2025 appear drier overall.
 
-## MTA ANALYSIS
+### MTA Analysis
 
 MTA data was pulled from data.gov, a site consisting of open data from the US government.  Both daily and monthly MTA data was imported.
 
@@ -532,7 +528,7 @@ Pandemic average daily ridership begins with a sharp decrease in ridership at th
 
 Post-pandemic average daily ridership patterns (for all modes of transit except `Bus`) also tend to gradually increase up until 2025. `Bus` ridership remains relatively variable from 2022 to 2025.
 
-## Plotting Weekday vs. Weekend Ridership Volume during Pandemic vs Post-Pandemic
+#### Plotting Weekday vs. Weekend Ridership Volume during Pandemic vs Post-Pandemic
 ```{r}
 pre_wknd =
 daily_mta_clean |> 
@@ -591,12 +587,11 @@ Overall, for both pandemic and post-pandemic analyses, ridership remains decreas
 
 Pre-pandemic ridership data could not be assess in this way since the pre-pandemic dataset only contained monthly ridership data; weekday/weekend could not be differentiated using the monthly data. Therefore, the analysis is limited to the daily ridership dataset, which includes pandemic and onward.
 
-# Grouped Analyses 
+## Additional/Grouped Analyses 
 
-# COVID and MTA Comparison 
+### COVID and MTA Comparison 
 
 #### MTA Ridership and Covid-19 Cases
-
 ```{r}
 # Average daily MYA Ridership 
 ridership_modes =
@@ -697,11 +692,11 @@ final_figure =
 final_figure
 ```
 
-- Had to stack the graphs instead of merging becasue the scale is so different 
-- created hover so you can look at peaks and dips across both graphs 
-- had to create the covid graph instead of using the DF saved earlier beause had to get rid of viridis it was giving me issues 
-- Interpretation: Taken together, the two panels suggests that COVID-19 surges correspond with noticeable interruptions in ridership recovery / The figure highlights both the immediate impact of COVID waves and the broader, lasting transformation of mobility patterns. 
-- To examine these interruptions more directly, I'm gonna create more specific surge periods—quantifying how ridership levels shifted during each wave relative to pre-pandemic baselines and seeing which modes were most resilient across disruptions.
+This plotly depicts MTA Average Daily Ridership from 2018 to 2025 atop Daily COVID-19 Cases. The MTA Average Daily Ridership plot shows three different curves--subway, bus, and other. Remaining transit mode categories are grouped into "other" due to limited counts.
+
+Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership recovery. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting transformation of transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022, the is a corresponding dip in Average Daily Ridership across all three transit mode categories. 
+
+To examine ridership interruptions more directly, it is necessary to quantify how ridership levels shifted during each wave relative to pre-pandemic baselines and to see which transit modes were most resilient across interruptions.
 
 #### Pandemic Recovery
 ```{r}
@@ -745,7 +740,7 @@ recovery |>
   )
 ```
 
-- Moved this down from individual analyses to grouped 
+Based on this figure, none of the transit modes have fully recovered to pre-pandemic ridership levels. Bus ridership recovered the fastest early on, but flattened around 2023. This pattern can likely be attributed to the fact that buses serve essential, local, and short-distance trips, and have "fresher" air circulation than subways, for example. For subways, ridership shows a slower, steadier recovery path and still appears to be recovering steadily as commuting patterns normalize. That said, subway ridership still remains meaningfully below pre-pandemic levels. Ridership in the `Other` category has recovered more rapidly in the post-pandemic period--likely reflecting return-to-office policies and patterns on a hybrid or fully in-person basis. Whereas individuals that use the subway or bus are more likely to live in NYC and have alternative ways of commuting to work (i.e. walking, biking), individuals who use "Other" forms of public transit are likely those using long-distance and commuter rails (i.e. LIRR, MNR) and are thus more reliant on these forms to commute to work. This explains the pattern of more rapidly growing ridership during the post-pandemic period. 
 
 #### Ridership During Key Periods Compared to 2018 
 ```{r}
