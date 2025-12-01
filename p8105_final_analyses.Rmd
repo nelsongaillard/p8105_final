@@ -372,7 +372,9 @@ Similarly, `Total Precipitation (mm)` (i.e. rainfall) by year was plotted.
 
 Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters--such as 2018, 2019, and 2020--depict consistently high precipitation across all four months, whereas other years like 2020 and 2025 appear drier overall.
 
-# MTA ANALYSIS
+## MTA ANALYSIS
+
+MTA data was pulled from data.gov, a site consisting of open data from the US government.  Both daily and monthly MTA data was imported.
 
 #### Read in MTA data
 ```{r}
@@ -456,6 +458,12 @@ full_mta =
   )
 ```
 
+To clean the data, `monthly_mta` was divided into data before the COVID-19 pandemic (`monthly_pre`) and data during/after the COVID-19 pandemic (`monthly_post`). Like for COVID-19 data and Weather data, `year` and `month` were both extracted. Additionally, transit modes were standardized (i.e. combining various bus agencies into `Bus`). An `average_daily_ridership` variable was created by taking monthly ridership data and divided it by the number of days in each respective month. For `monthly_pre`, only observations from years 2018 and 2019 were kept.
+
+The `daily_mta` dataset was cleaned in a similar way by converting dates (extracting year and month), parsing ridership counts, and standardizing transit modes to be consistent with `monthly_pre`. Weekend indicators were also added. Cleaned daily data was then aggregated to `monthly_post` by averaging daily ridership data across each month.
+
+Finally, pre-pandemic and post-2020 monthly datasets are combined in `full_mta`, sorted chronologically, assigned a standardized date (beginning on the first of each month), and organized into three periods--pre-pandemic, pandemic, and post-pandemic--based on year and month. 
+
 #### Pre- vs. Post-Pandemic Modeling
 ```{r}
 pre =
@@ -515,9 +523,14 @@ combined = pre / pandemic / post
 
 combined
 ```
-* combined = all three graphs combined to show pre vs. pandemic vs. post
 
-- Pre pandemic: modes were 
+Analyses for pre-pandemic, pandemic, and post-pandemic were organized into a facet grid showcasing `Average Daily Ridership` across six different modes of public transportation. 
+
+Pre-pandemic average daily ridership remained expectedly variable.
+
+Pandemic average daily ridership begins with a sharp decrease in ridership at the start of the pandemic and then gradually increases over time.
+
+Post-pandemic average daily ridership patterns (for all modes of transit except `Bus`) also tend to gradually increase up until 2025. `Bus` ridership remains relatively variable from 2022 to 2025.
 
 ## Plotting Weekday vs. Weekend Ridership Volume during Pandemic vs Post-Pandemic
 ```{r}
@@ -571,7 +584,12 @@ ggplot(aes(x = weekend, y = count, fill = weekend)) +
 combined_weekend = pre_wknd / post_wknd
 combined_weekend
 ```
-- Limitation: Since our pre-pandemic dataset was `monthly_mta.csv` (monthly ridership data), we are unable to pull out specific weekday/weekend. Therefore, our analysis is limited to our daily `mta.csv` dataset, which includes pandemic and onward. 
+
+Using the clean daily ridership dataset, `daily_mta_clean`, a violin plot was created of daily ridership for each mode of transportation for `Weekday` and `Weekend`, comparing ridership during the pandemic (2020-2021) and following the pandemic (2022-2025). 
+
+Overall, for both pandemic and post-pandemic analyses, ridership remains decreased during the weekends. However, during the pandemic, overall ridership suffered a decrease with average daily ridership for the subway, for example, sitting at half the average daily ridership post-pandemic.
+
+Pre-pandemic ridership data could not be assess in this way since the pre-pandemic dataset only contained monthly ridership data; weekday/weekend could not be differentiated using the monthly data. Therefore, the analysis is limited to the daily ridership dataset, which includes pandemic and onward.
 
 # Grouped Analyses 
 
