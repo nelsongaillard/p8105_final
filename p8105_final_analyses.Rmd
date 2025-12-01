@@ -846,7 +846,9 @@ During the vaccine-rollout wave, ridership partially recovered, but it depended 
 
 Although the Omicron surge resulted in a spike in case counts, New York City did not reinstate shutdown measures. Workplaces, schools, and businesses remained open; vaccination rates were high; the NYC population's behavioral response was less dramatic than prior COVID-19 variants. This likely explains why ridership continued to return to pre-pandemic levels, despite the stark increase in case counts. 
 
-# Weather and MTA 
+### Weather and MTA 
+
+It is also of interest to examine how varying weather and temperature patterns may affect ridership in NYC.
 
 #### Average Monthly Temperature and MTA Ridership
 
@@ -877,11 +879,9 @@ ggplot(monthly_weather_mta,
     color = "Transit Mode"
   ) +
   theme_minimal(base_size = 14)
-
-
 ```
 
-- Seems like weather does not have that much of an impact 
+Based on this plot, there is a dip in average ridership as temperatures approach temperatures greater than 25°C, likely due to excess heat and lack of ventilation in MTA subway stations. Overall, temperature does not appear to have that much of an impact on MTA ridership; trend lines remain relatively consistent across all average monthly temperatures. 
 
 #### Extreme weather conditions (% Change compared to normal ridership days)
 
@@ -949,6 +949,14 @@ extreme_plot =
 
 extreme_plot
 ```
+
+This plot shows the percent change in ridership on days with extreme weather. Extreme weather was defined as any maximum temperature (`tmax_c`) greater than 32.2°C, any rainfall (`prcp_mm`) greater than 25.4mm, and any snowfall (`snow_mm`) greater than 127mm. 
+
+After calculating the percent change in ridership across the three transit modes (Bus, Subway, and Other), ridership in the "Other" transit mode category shows the steepest decrease in ridership on extreme weather days with a ~22% change. These forms of transportation are more highly weather-sensitive, perhaps due to train track flooding, downed powerlines, wind damage, signal outages, and reduced service frequencies. 
+
+Subway ridership shows a lesser percent decrease at ~14% lesser ridership during extreme weather days. Subway riders may be more sensitive to weather-related disruptions due to potential subway station flooding, service delays, longer wait times, and severe heat within subway stations.
+
+Last, Bus ridership averages a ~7% decrease in average daily ridership on extreme weather days, making it the most resilient to extreme weather compared to the other transit modes. Bus riders may see buses as a safer option in snow/rain/heat. During extreme weather events, there is no doubt that street-level service is disrupted, especially during heavy rainfall and snowfall, but these effects are still smaller than those for subway riders and riders within the "Other" category. 
 
 # MTA x WEATHER x COVID Analysis- Linear Regression 
 
