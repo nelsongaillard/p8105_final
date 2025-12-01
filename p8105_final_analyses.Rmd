@@ -1015,11 +1015,13 @@ model_clean |>
 
 ```
 
-- We estimated separate linear regression models for bus, subway, and “other” transit modes to examine whether monthly average temperature and monthly COVID-19 case counts predicted ridership.
-- Across all three modes, temperature was not a significant predictor of ridership (Bus: p = 0.172; Other: p = 0.961; Subway: p = 0.220), indicating that month-to-month weather variation did not meaningfully influence transit demand.
-- COVID-19 case counts were strongly and consistently associated with reduced ridership for all (p<0.05)
-- the models suggest that COVID-19 rather than ordinary weather fluctuations—were the dominant driver of pandemic-era ridership drops
-- Temp has large coefficients but large standard erros so heir t values are not significant 
+A linear regression model was used to examine whether monthly average temperatures and monthly COVID-19 case counts predicted ridership counts across bus, subway, and "other" transit modes.
+
+For buses, ridership decreases by 6,980 riders for every single unit increase in °C (p = 0.172). Ridership decreases by 1.5 riders for every new case of COVID-19 (p = 0.009). For "Other", ridership actually increases by 83 riders for every single unit increase in °C (p = 0.961). Ridership decreases by 0.61 riders for every new case of COVID-19 (p = 0.001). For subway, ridership decreases by 16,808 riders for every single unit increase in °C (p = 0.220). Ridership decreases by 5.8 riders for every new case of COVID-19 (p < 0.001).
+
+Across all three modes, temperature was not a significant predictor of ridership (Bus: p = 0.172; Other: p = 0.961; Subway: p = 0.220), indicating that month-to-month weather variation did not meaningfully influence transit demand. On the other hand, COVID-19 case counts was strongly and consistently associated with reduced ridership across all transit modes (Bus, Other, Subway: p < 0.05). 
+
+These models suggest that COVID-19 was the dominant driver of ridership drops during the pandemic, not weather.
 
 ## Discussion
 
