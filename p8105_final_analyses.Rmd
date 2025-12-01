@@ -1,5 +1,5 @@
 ---
-title: "The Effects of Weather Patterns on MTA Transit Behavior in New York City"
+title: "Riding Out the Storm: MTA Ridership through the COVID-19 Pandemic and Weather Variability in NYC"
 output: html_document
 date: "December 6, 2025"
 ---
@@ -10,11 +10,11 @@ Nelson Gaillard (ng3005),
 Mahitha Jangeti (mj3229),
 Matariya Rattanapan (mkr2158)
 
-## Motivation
+## Motivation and Related Work
 
-The COVID-19 pandemic altered patterns of public transit use, exposing the sensitivity of urban mobility to both public-health and environmental conditions. Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, and how long recovery took across time and boroughs. These insights can guide policy around public health preparedness, transit safety, and infrastructure planning under climate variability.
+Keith Gessen in The New Yorker writes "[The subway] is considered a national treasure for its diversity, and also very fast if you catch the express from Queensboro Plaza to Sixty-first Street-Woodside". The Metropolitan Transportation Authority (MTA) is an essential backbone of New York City, moving millions of riders daily, enabling social, cultural, and economic activity--even for those commuting from their homes to the Columbia University Irving Medical Center.
 
-## Related Work
+But the COVID-19 pandemic altered patterns of public transit use, especially in New York, exposing the sensitivity of urban mobility to both public-health and environmental conditions. As proponents of the MTA ourselves, we were interested in learning more about how New Yorkers who rely on buses, subways, and additional forms of public transportation adapted their behavior in response to COVID-19 and varying weather patterns from before the pandemic (2018) to now (2025). Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, ridership behavior, and public transit recovery patterns that carried such modes of transportation to the numbers we see today. These insights can guide policy around public health preparedness, climate variability, and transit safety to help support a resilient transit system that continues to meet the needs of all New Yorkers.
 
 ## Initial Questions
 
