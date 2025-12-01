@@ -979,6 +979,11 @@ model_clean |>
 
 ```
 
+- We estimated separate linear regression models for bus, subway, and “other” transit modes to examine whether monthly average temperature and monthly COVID-19 case counts predicted ridership.
+- Across all three modes, temperature was not a significant predictor of ridership (Bus: p = 0.172; Other: p = 0.961; Subway: p = 0.220), indicating that month-to-month weather variation did not meaningfully influence transit demand.
+- COVID-19 case counts were strongly and consistently associated with reduced ridership for all (p<0.05)
+- the models suggest that COVID-19 rather than ordinary weather fluctuations—were the dominant driver of pandemic-era ridership drops
+- Temp has large coefficients but large standard erros so heir t values are not significant 
 
 
 
