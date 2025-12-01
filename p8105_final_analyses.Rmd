@@ -18,13 +18,6 @@ The COVID-19 pandemic altered patterns of public transit use, exposing the sensi
 
 ## Initial Questions
 
-## Exploratory Analyses
-
-## Additional Analyses
-
-## Discussion
-
-
 ```{r setup, include=FALSE}
 library(lubridate)
 library(tidyverse)
@@ -845,10 +838,13 @@ plotly_surge =
 plotly_surge
 ```
 
-- Summarizes how MTA ridership (bus, subway, and other modes) changed across each key COVID-19 periods, shown as a percentage of 2018 daily baseline levels.
-- Across all modes, the lock down wave produced the most dramatic decline (stay at home orders )
-- During the vaccine-rollout wave, ridership partially recovered, depending on mode. (vaccination campaigns began, restrictions eased, and more people returned to work — but overall transit use remained far below pre-pandemic levels) 
-- Although Omicron caused a spike in case counts, the city did not reinstate shutdown measures. (Workplaces, schools, and businesses remained open; vaccination rates were high; and the population’s behavioral response was less dramatic) which prolly explains why so much of ridership continued to return 
+This plotly represents a depiction of MTA ridership (bus, subway, and other transit modes) during key phases during the COVID-19 pandemic, shown as a percentage of 2018 daily baseline levels. 
+
+Across all transit modes, the lockdown wave produced the most dramatic decline in ridership, likely due to stay-at-home policies/orders. 
+
+During the vaccine-rollout wave, ridership partially recovered, but it depended on the transit mode. As depicted in the previous plot, Bus ridership recovery increased rapidly at first; this pattern is reflected in this plot. However, for the subway, ridership recovery remained slow and steady. Overall, there remains an increase across all transit modes, likely due to the start of vaccination campaigns, ease of lockdown and quarantine restrictions, and an increase in the number of people returning to work. That said, overall transit use remained far below pre-pandemic levels.
+
+Although the Omicron surge resulted in a spike in case counts, New York City did not reinstate shutdown measures. Workplaces, schools, and businesses remained open; vaccination rates were high; the NYC population's behavioral response was less dramatic than prior COVID-19 variants. This likely explains why ridership continued to return to pre-pandemic levels, despite the stark increase in case counts. 
 
 # Weather and MTA 
 
@@ -1017,6 +1013,6 @@ model_clean |>
 - the models suggest that COVID-19 rather than ordinary weather fluctuations—were the dominant driver of pandemic-era ridership drops
 - Temp has large coefficients but large standard erros so heir t values are not significant 
 
-
+## Discussion
 
 
