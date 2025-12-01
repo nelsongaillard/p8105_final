@@ -62,5 +62,5 @@ The NOAA Daily Summaries dataset provides daily meteorological observations coll
 </div>
 
 ### Data-Cleaning
-The weather dataset required unit conversion and date standardization before analysis. After cleaning the column names, data field was converted to proper format and year and month values were extracted. NOAA records temperatures, precipitation, and snow in tenths of their actual units, so min and max temperatures were converted to degrees Celsius by dividing by ten. Precipitation and snow were also transformed into millimeters. An average daily temperature variable was added to represent overall warmth or coldness and data was restricted to years 2018-2025 to match span of MTA and COVID datasets. 
+The weather dataset required unit conversion and date standardization before analysis. After cleaning the column names, data field was converted to proper format and year and month values were extracted. NOAA records temperatures, precipitation, and snow in tenths of their actual units, so min and max temperatures were converted to degrees Celsius by dividing by ten. Precipitation and snow were also transformed into millimeters. An average daily temperature variable was added to represent overall warmth or coldness and data was restricted to years 2018-2025 to match the time frames of MTA and COVID datasets. 
 
