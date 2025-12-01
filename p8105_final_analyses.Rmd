@@ -18,6 +18,12 @@ The COVID-19 pandemic altered patterns of public transit use, exposing the sensi
 
 ## Initial Questions
 
+In this project, we are interested in how MTA patterns changed in response to the COVID-19 pandemic and variability in weather patterns across New York City from 2018 to 2025. 
+
+More specifically, we are interested in examining whether increases in COVID-19 cases have led to remarkable reductions in ridership, and whether the magnitude of the responses differed for buses, subways, and additional public transportation services. In addition, in looking at ridership recovery during and after the COVID-19 pandemic, we can analyze how recovery trajectories varied across transit modes. We are also eager to investigate how extreme weather events--such as heavy rainfall, snowstorms, and heat waves--have affected daily public transportation ridership and whether some transit modes remain more resilient to weather changes than others. 
+
+Together, these questions aim to clarify how COVID-19 and weather have disrupted urban mobility and what they reveal about the vulnerabilities of public transportation in New York City. 
+
 ```{r setup, include=FALSE}
 library(lubridate)
 library(tidyverse)
@@ -30,7 +36,7 @@ library(broom)
 knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
 ```
 
-# Data: Source, Scraping, Cleaning, etc
+# Data: Source, Scraping, Cleaning
 
 ## Exploratory Analyses
 
