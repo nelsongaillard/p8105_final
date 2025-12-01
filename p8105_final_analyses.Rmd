@@ -10,21 +10,23 @@ Nelson Gaillard (ng3005),
 Mahitha Jangeti (mj3229),
 Matariya Rattanapan (mkr2158)
 
-# Motivation
+## Motivation
 
 The COVID-19 pandemic altered patterns of public transit use, exposing the sensitivity of urban mobility to both public-health and environmental conditions. Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, and how long recovery took across time and boroughs. These insights can guide policy around public health preparedness, transit safety, and infrastructure planning under climate variability.
 
-# Related Work
+## Related Work
 
-# Initial Questions
+## Initial Questions
 
-# Data: Source, Scraping, Cleaning, etc
 
-# Exploratory Analyses
 
-# Additional Analyses
 
-# Discussion
+
+## Exploratory Analyses
+
+## Additional Analyses
+
+## Discussion
 
 
 ```{r setup, include=FALSE}
@@ -38,15 +40,21 @@ library(knitr)
 library(broom)
 knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
 ```
-# Individual Analyses 
 
-# COVID-19 ANALYSIS
+# Data: Source, Scraping, Cleaning, etc
+
+## Individual Analyses 
+
+## COVID-19 ANALYSIS
+
+We pulled COVID-19 data is from opendata.cityofnewyork.us, a site consisting of open data sources about various topics affecting New York City boroughs. 
 
 #### Reading in the covid datafile.
 ```{r}
 covid_df =
 read.csv("data/covid_19.csv")
 ```
+
 #### Separating the date variable into month, day, and year + arranging
 ```{r}
 clean_covid_df =
@@ -61,6 +69,9 @@ clean_covid_df =
   ) |>
   arrange(date)
 ```
+
+To preemptively ensure consistency across all four data sets, date information was pulled from the data set and mutated to develop a new date variable `date_of_interest`. Additionally, `case_count`, `case_count_7day_avg`, `hospitalized_count`, and `death_count` were all formatted as numeric variables. Lastly, the data set was sorted by date.
+
 #### Marking events for lockdown, rollout of vaccine, and the surge of omicron
 ```{r}
 events = tibble(
@@ -71,6 +82,9 @@ events = tibble(
 
 max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
 ```
+
+Important events pertaining to the COVID-19 pandemic were highlighted in a new dataframe `events`, marking the start date and end date of `Lockdown`, `Vaccine rollout`, and `Omicron surge`, respectively. 
+
 #### Plotting the daily COVID-19 cases by Year
 ```{r}
 clean_covid_df |> 
@@ -126,8 +140,9 @@ clean_covid_df |>
   )
 ```
 
-- I changed it to log scale so that we can see all the peaks instead of it being concentrated at the x axis 
-- Interpretation: The log-scale plot shows NYC’s daily COVID-19 cases from 2020–2025, with darker colors indicating lower counts and bright yellow marking the highest case days. The largest spike appears during the Omicron surge, far exceeding the earlier lockdown and vaccine-rollout waves even after log transformation. After Omicron, case levels drop substantially and settle into smaller, seasonal winter increases (which is expected) through 2023–2025, indicating a sustained decline in large outbreaks.
+Before diving deeper into further analyses, it is important to visualize COVID-19 cases across the years of interest. In a plotly, `Daily COVID-19 Cases` was plotted against `Year` using the `case_count` and `date` variables. `Daily COVID-19 Cases` was transformed to the log scale to more easily visualize the peaks/spikes of COVID-19 cases from 2020 to 2025. 
+
+Overall, the log-scale plot shows NYC's daily COVID-19 cases from 2020 to 2025, with darker colors representing lower casse counts and bright yellow marking the highest case days. The largest spike appears during the Omicron surge of the pandemic, far exceeding the earlier lockdown and vaccine-rollout waves, even after log transformation. Ultimately, case levels drop substantially after the Omicron surge and settle into smaller, seasonal increases--particularly during Winter--through 2023 to 2025. This insight indicates a sustained decline in large outbreaks.
 
 #### Plot Weekly COVID-19 Cases by Year
 ```{r}
@@ -191,8 +206,9 @@ clean_covid_df |>
   )
 ```
 
-- After the initial lockdown period, the weekly average shows a sharp and sustained decline in cases, reflecting the immediate impact of reduced mobility and strict public health measures. A similar post–vaccine-rollout decline appears in early 2021, where cases fall noticeably, reflecting the early effects of widespread vaccination and reduced transmission. 
-- This again aligns with what we saw in the previous graph 
+COVID-19 over time was also visualized using the `case_count_7day_avg` variable for a more zoomed out picture of COVID-19 from 2020 to 2025. 
+
+After the initial lockdown period, the weekly average shows a sharp and sustained decline in cases, reflecting the immediate impact of reduced mobility and strict public health measures. A similar decline appears following vaccine-rollout in early 2021, where cases fall noticeably, reflecting the early effects of widespread vaccination and reduced transmission. The conclusions from this plot (`7-day Average COVID-19 Cases` vs. `Year`) align with those showcased in the plot above (`Daily COVID-19 Cases` vs. `Year`). 
 
 #### Correlation Heat Map of Cases, Hospitalization, and Deaths
 ```{r}
@@ -225,7 +241,9 @@ plot_ly(
   )
 ```
 
-- Interpretation: The correlation matrix shows that hospitalizations and deaths are strongly related, which reflects the expected clinical progression from severe illness to mortality. Cases have only a moderate correlation with hospitalizations and a weak correlation with deaths, likely because widespread vaccination, changing testing behavior, and the milder Omicron waves reduced the proportion of cases that became severe. 
+To visualize associations between COVID-19 cases, hospitalizations, and deaths, a correlation matrix was generated.
+
+The matrix shows that hospitalizations and deaths are strongly correlated, which reflects the expected clinical progression from severe illness to mortality. Cases have a moderate correlation with hospitalizations and a weak corelation with deaths, likely due to widespread vaccination, changes in testing behavior, and milder Omicron waves that reduced the proportion of severe cases.
 
 # WEATHER ANALYSIS
 
