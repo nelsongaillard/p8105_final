@@ -33,6 +33,7 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
@@ -224,6 +225,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -354,6 +358,14 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
 
 
 <h1 class="title toc-ignore">Data Processing</h1>
@@ -361,6 +373,13 @@ div.tocify {
 </div>
 
 
+<div id="data-sources" class="section level1">
+<h1>Data Sources</h1>
+<div style="margin-bottom: 20px;">
+
+</div>
+<hr />
+<div class="section">
 <div id="mta-daily-ridership-data-20202025" class="section level2">
 <h2><strong>MTA Daily Ridership Data (2020–2025)</strong></h2>
 <p>The MTA Daily Ridership dataset provides information on passengers
@@ -388,8 +407,10 @@ services. Additional variables were created to capture the year, month,
 weekday, and weekend indicators. Only records from 2020 onward were
 kept, reflecting the period when daily reporting became consistent
 during the pandemic.</p>
+<hr />
 </div>
 </div>
+<div class="section">
 <div id="mta-pre-covid-monthly-ridership-data-20082019"
 class="section level2">
 <h2><strong>MTA Pre-COVID Monthly Ridership Data
@@ -408,17 +429,187 @@ later understand changes during the pandemic.</p>
 </div>
 <div id="data-cleaning-1" class="section level3">
 <h3>Data-Cleaning</h3>
-<p>For the pre-COVID period, monthly MTA dataset was cleaned by
-converting <code>Month</code> field into a date format (year,month
-number, and month name). Monthly ridership totals were stored as text
-and required conversion to numeric form. To make these monthly values
-comparable to the daily dataset, an average daily ridership variable was
-calculated by dividing each month’s total by the number of days in the
-month. Transit mode labels were standardized to match those in the daily
-dataset and the data was filtered to include only 2018 and 2018 so that
-the pre-pandemic baseline was created.</p>
+<p>To clean the data, <code>monthly_mta</code> was divided into data
+before the COVID-19 pandemic (<code>monthly_pre</code>) and data
+during/after the COVID-19 pandemic (<code>monthly_post</code>). Like for
+COVID-19 data and Weather data, <code>year</code> and <code>month</code>
+were both extracted. Additionally, transit modes were standardized
+(i.e. combining various bus agencies into <code>Bus</code>). An
+<code>average_daily_ridership</code> variable was created by taking
+monthly ridership data and divided it by the number of days in each
+respective month. For <code>monthly_pre</code>, only observations from
+years 2018 and 2019 were kept.</p>
+<p>Finally, pre-pandemic and post-2020 monthly datasets are combined in
+<code>full_mta</code>, sorted chronologically, assigned a standardized
+date (beginning on the first of each month), and organized into three
+periods–pre-pandemic, pandemic, and post-pandemic–based on year and
+month.</p>
+<div id="full-mta-ridership-data-daily-monthly-combined"
+class="section level4">
+<h4><strong>Full MTA Ridership Data (Daily + Monthly
+Combined)</strong></h4>
+<pre class="r"><code>library(lubridate)
+library(tidyverse)
+library(plotly)
+library(patchwork)
+library(dplyr)
+library(scales)
+library(knitr)
+library(broom)
+
+daily_mta = 
+  read.csv(&quot;data/mta.csv&quot;)
+
+monthly_mta =
+  read.csv(&quot;data/monthly_mta.csv&quot;)
+
+monthly_pre =
+  monthly_mta |&gt;
+  janitor::clean_names() |&gt;
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c(&quot;NYCT Bus&quot;, &quot;MTA Bus&quot;, &quot;Bus&quot;) ~ &quot;Bus&quot;,
+      agency %in% c(&quot;Subway&quot;,&quot;MNR&quot;,&quot;LIRR&quot;,&quot;AAR&quot;,&quot;SIR&quot;) ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |&gt;
+  filter(
+    year &gt;= 2018,
+    year &lt;= 2019,
+    !is.na(mode)
+  ) |&gt;
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |&gt;
+  janitor::clean_names() |&gt;
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c(&quot;NYCT Bus&quot;, &quot;MTA Bus&quot;, &quot;Bus&quot;) ~ &quot;Bus&quot;,
+      mode %in% c(&quot;AAR&quot;,&quot;Subway&quot;,&quot;LIRR&quot;,&quot;MNR&quot;,&quot;SIR&quot;) ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |&gt;
+  filter(year &gt;= 2020, !is.na(mode)) |&gt; 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c(&quot;Sat&quot;, &quot;Sun&quot;), &quot;Weekend&quot;, &quot;Weekday&quot;)
+  )
+
+monthly_post =
+  daily_mta_clean |&gt;
+  group_by(year, month_num, month_name, mode) |&gt;
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = &quot;drop&quot;
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |&gt;
+  arrange(year, month_num, mode) |&gt;
+  mutate(
+    date = as.Date(paste(year, month_num, &quot;01&quot;, sep = &quot;-&quot;)),
+    period = case_when(
+      year &lt; 2020 ~ &quot;Pre-Pandemic&quot;,
+      year == 2020 &amp; month_num &lt;= 2 ~ &quot;Pre-Pandemic&quot;,
+      year == 2020 &amp; month_num &gt;= 3 ~ &quot;Pandemic&quot;,
+      year == 2021 ~ &quot;Pandemic&quot;,
+      year &gt;= 2022 ~ &quot;Post-Pandemic&quot;),
+    period = factor(period, levels = c(&quot;Pre-Pandemic&quot;, &quot;Pandemic&quot;, &quot;Post-Pandemic&quot;))
+  )
+
+knitr::kable(
+  head(full_mta, 5)
+)</code></pre>
+<table>
+<colgroup>
+<col width="6%" />
+<col width="12%" />
+<col width="14%" />
+<col width="9%" />
+<col width="25%" />
+<col width="14%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">year</th>
+<th align="right">month_num</th>
+<th align="left">month_name</th>
+<th align="left">mode</th>
+<th align="right">avg_daily_ridership</th>
+<th align="left">date</th>
+<th align="left">period</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2018</td>
+<td align="right">1</td>
+<td align="left">January</td>
+<td align="left">Bus</td>
+<td align="right">1464478.6</td>
+<td align="left">2018-01-01</td>
+<td align="left">Pre-Pandemic</td>
+</tr>
+<tr class="even">
+<td align="right">2018</td>
+<td align="right">1</td>
+<td align="left">January</td>
+<td align="left">MNR</td>
+<td align="right">218214.8</td>
+<td align="left">2018-01-01</td>
+<td align="left">Pre-Pandemic</td>
+</tr>
+<tr class="odd">
+<td align="right">2018</td>
+<td align="right">1</td>
+<td align="left">January</td>
+<td align="left">Subway</td>
+<td align="right">4344626.9</td>
+<td align="left">2018-01-01</td>
+<td align="left">Pre-Pandemic</td>
+</tr>
+<tr class="even">
+<td align="right">2018</td>
+<td align="right">2</td>
+<td align="left">February</td>
+<td align="left">Bus</td>
+<td align="right">1597136.1</td>
+<td align="left">2018-02-01</td>
+<td align="left">Pre-Pandemic</td>
+</tr>
+<tr class="odd">
+<td align="right">2018</td>
+<td align="right">2</td>
+<td align="left">February</td>
+<td align="left">MNR</td>
+<td align="right">223071.8</td>
+<td align="left">2018-02-01</td>
+<td align="left">Pre-Pandemic</td>
+</tr>
+</tbody>
+</table>
+<hr />
 </div>
 </div>
+</div>
+<div class="section">
 <div id="nyc-covid-19-daily-case-counts-2020-2025"
 class="section level2">
 <h2><strong>NYC COVID-19 Daily Case Counts (2020-2025)</strong></h2>
@@ -447,6 +638,136 @@ formatting and then convert to numeric form. A set of key pandemic
 periods: lock down, vaccine roll out, and the Omicron surge, was defined
 to support later interpretation. The cleaned dataset provides both daily
 cases and seven-day averages.</p>
+<div id="covid-19-data" class="section level4">
+<h4><strong>COVID-19 Data</strong></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+date_of_interest
+</th>
+<th style="text-align:right;">
+case_count
+</th>
+<th style="text-align:left;">
+probable_case_count
+</th>
+<th style="text-align:right;">
+hospitalized_count
+</th>
+<th style="text-align:right;">
+death_count
+</th>
+<th style="text-align:right;">
+case_count_7day_avg
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+02/29/2020
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+03/01/2020
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+03/02/2020
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+03/03/2020
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+03/04/2020
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
 </div>
 </div>
 <div id="noaa-weather-data--central-park-2018-2025"
@@ -478,6 +799,157 @@ Celsius by dividing by ten. Precipitation and snow were also transformed
 into millimeters. An average daily temperature variable was added to
 represent overall warmth or coldness and data was restricted to years
 2018-2025 to match the time frames of MTA and COVID datasets.</p>
+<div id="weather-data" class="section level4">
+<h4><strong>Weather Data</strong></h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+station
+</th>
+<th style="text-align:left;">
+date
+</th>
+<th style="text-align:right;">
+prcp
+</th>
+<th style="text-align:right;">
+snow
+</th>
+<th style="text-align:left;">
+snow_attributes
+</th>
+<th style="text-align:right;">
+tmax
+</th>
+<th style="text-align:right;">
+tmin
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+USW00094728
+</td>
+<td style="text-align:left;">
+2018-01-01
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+,,W,2400
+</td>
+<td style="text-align:right;">
+-71
+</td>
+<td style="text-align:right;">
+-138
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USW00094728
+</td>
+<td style="text-align:left;">
+2018-01-02
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+,,W,2400
+</td>
+<td style="text-align:right;">
+-32
+</td>
+<td style="text-align:right;">
+-105
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USW00094728
+</td>
+<td style="text-align:left;">
+2018-01-03
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+,,W,2400
+</td>
+<td style="text-align:right;">
+-10
+</td>
+<td style="text-align:right;">
+-88
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USW00094728
+</td>
+<td style="text-align:left;">
+2018-01-04
+</td>
+<td style="text-align:right;">
+193
+</td>
+<td style="text-align:right;">
+249
+</td>
+<td style="text-align:left;">
+,,W,2400
+</td>
+<td style="text-align:right;">
+-16
+</td>
+<td style="text-align:right;">
+-71
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+USW00094728
+</td>
+<td style="text-align:left;">
+2018-01-05
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+,,W,2400
+</td>
+<td style="text-align:right;">
+-71
+</td>
+<td style="text-align:right;">
+-127
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 
@@ -516,6 +988,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

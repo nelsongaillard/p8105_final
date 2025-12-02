@@ -5,8 +5,14 @@ output:
   html_document:
     toc: true
     toc_float: true
+    code_folding: hide
+---
+# Data Sources
+<div style="margin-bottom: 20px;"></div>
+
 ---
 
+<div class="section">
 ## **MTA Daily Ridership Data (2020–2025)**
 
 The MTA Daily Ridership dataset provides information on passengers across different MTA transit modes:subway, buses, LIRR, Metro-North, Access-A-Ride, and Staten Island Railway. The dataset begins during the COVID-19 pandemic to allow the public to track real-time changes in transit usage.
@@ -21,6 +27,9 @@ The MTA Daily Ridership dataset provides information on passengers across differ
 ### Data-Cleaning
 To create a clean dataset, column names were standardized and the data field was converted to a proper `Date` format. Ridership counts were originally stored as character strings with commas, so these were parsed into numeric values. Becuase there were several versions of the same transit mode, all bus-related categories were collapsed into a single "Bus" mode and other similar standardization was done for rail services. Additional variables were created to capture the year, month, weekday, and weekend indicators. Only records from 2020 onward were kept, reflecting the period when daily reporting became consistent during the pandemic. 
 
+---
+
+<div class="section">
 ## **MTA Pre-COVID Monthly Ridership Data (2008–2019)**
 
 The MTA monthly ridership data reports monthly ridership totals for major MTA services from 2008-2019, representing pre-pandemic transit patterns. This data establishes a baseline on ridership activity to later understand changes during the pandemic. 
@@ -33,8 +42,106 @@ The MTA monthly ridership data reports monthly ridership totals for major MTA se
 </div>
 
 ### Data-Cleaning
-For the pre-COVID period, monthly MTA dataset was cleaned by converting `Month` field into a date format (year,month number, and month name). Monthly ridership totals were stored as text and required conversion to numeric form. To make these monthly values comparable to the daily dataset, an average daily ridership variable was calculated by dividing each month's total by the number of days in the month. Transit mode labels were standardized to match those in the daily dataset and the data was filtered to include only 2018 and 2018 so that the pre-pandemic baseline was created.
+To clean the data, `monthly_mta` was divided into data before the COVID-19 pandemic (`monthly_pre`) and data during/after the COVID-19 pandemic (`monthly_post`). Like for COVID-19 data and Weather data, `year` and `month` were both extracted. Additionally, transit modes were standardized (i.e. combining various bus agencies into `Bus`). An `average_daily_ridership` variable was created by taking monthly ridership data and divided it by the number of days in each respective month. For `monthly_pre`, only observations from years 2018 and 2019 were kept.
 
+Finally, pre-pandemic and post-2020 monthly datasets are combined in `full_mta`, sorted chronologically, assigned a standardized date (beginning on the first of each month), and organized into three periods--pre-pandemic, pandemic, and post-pandemic--based on year and month. 
+
+#### **Full MTA Ridership Data (Daily + Monthly Combined)**
+```{r, message = FALSE, warning = FALSE}
+
+library(lubridate)
+library(tidyverse)
+library(plotly)
+library(patchwork)
+library(dplyr)
+library(scales)
+library(knitr)
+library(broom)
+
+daily_mta = 
+  read.csv("data/mta.csv")
+
+monthly_mta =
+  read.csv("data/monthly_mta.csv")
+
+monthly_pre =
+  monthly_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      agency %in% c("Subway","MNR","LIRR","AAR","SIR") ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |>
+  filter(
+    year >= 2018,
+    year <= 2019,
+    !is.na(mode)
+  ) |>
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      mode %in% c("AAR","Subway","LIRR","MNR","SIR") ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(year >= 2020, !is.na(mode)) |> 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday")
+  )
+
+monthly_post =
+  daily_mta_clean |>
+  group_by(year, month_num, month_name, mode) |>
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |>
+  arrange(year, month_num, mode) |>
+  mutate(
+    date = as.Date(paste(year, month_num, "01", sep = "-")),
+    period = case_when(
+      year < 2020 ~ "Pre-Pandemic",
+      year == 2020 & month_num <= 2 ~ "Pre-Pandemic",
+      year == 2020 & month_num >= 3 ~ "Pandemic",
+      year == 2021 ~ "Pandemic",
+      year >= 2022 ~ "Post-Pandemic"),
+    period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
+  )
+
+knitr::kable(
+  head(full_mta, 5)
+)
+```
+
+---
+
+<div class="section">
 ## **NYC COVID-19 Daily Case Counts (2020-2025)**
 
 The COVID-19 dataset contains daily count of confirmed COVID-19 cases, hospitalizations, and deaths across New York City. These data track the trajectory of NYC's major waves: initial lock down, winter surge, variants Delta, and Omicron allowing us to identify periods of rapid transmission and compare them to changes in transit behavior. 
@@ -50,6 +157,51 @@ The COVID-19 dataset contains daily count of confirmed COVID-19 cases, hospitali
 ### Data-Cleaning
 The COVID-19 dataset contained many inconsistencies due to reporting variability across the pandemic. Columns names were cleaned, and date field was converted to a proper format. Using `gsub()`, many of the case, hospitalization, and death counts were cleaned to remove formatting and then convert to numeric form. A set of key pandemic periods: lock down, vaccine roll out, and the Omicron surge, was defined to support later interpretation. The cleaned dataset provides both daily cases and seven-day averages. 
 
+#### **COVID-19 Data**
+
+
+```{r, message, echo=FALSE, message=FALSE, warning=FALSE}
+covid_df =
+read.csv("data/covid_19.csv")
+
+clean_covid_df =
+  covid_df |>
+  janitor::clean_names() |>
+  mutate(
+    date = lubridate::mdy(date_of_interest),
+    case_count = as.numeric(gsub(",", "", case_count)),
+    case_count_7day_avg = as.numeric(gsub(",", "", case_count_7day_avg)),
+    hospitalized_count = as.numeric(gsub(",", "", hospitalized_count)),
+    death_count = as.numeric(gsub(",", "", death_count))
+  ) |>
+  arrange(date)
+
+events = tibble(
+  event = c("Lockdown", "Vaccine rollout", "Omicron surge"),
+  start = as.Date(c("2020-03-15", "2020-12-14", "2021-12-01")),
+  end   = as.Date(c("2020-06-15", "2021-03-01", "2022-02-15"))
+)
+
+max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
+
+clean_covid_df |>
+  select(
+    date_of_interest,
+    case_count,
+    probable_case_count,
+    hospitalized_count,
+    death_count,
+    case_count_7day_avg
+  ) |>
+  head(5) |>
+  knitr::kable(
+    "html",
+  )
+```
+
+---
+
+<div class="section">
 ## **NOAA Weather Data- Central Park (2018-2025)**
 
 The NOAA Daily Summaries dataset provides daily meteorological observations collected at Central Park, NYC's primary long-term weather station. Because temperature, precipitation, and snow influence travel behavior and transit operations, this dataset is used to evaluate how weather patterns shape seasonal ridership and interact with pandemic-related changes. 
@@ -63,4 +215,55 @@ The NOAA Daily Summaries dataset provides daily meteorological observations coll
 
 ### Data-Cleaning
 The weather dataset required unit conversion and date standardization before analysis. After cleaning the column names, data field was converted to proper format and year and month values were extracted. NOAA records temperatures, precipitation, and snow in tenths of their actual units, so min and max temperatures were converted to degrees Celsius by dividing by ten. Precipitation and snow were also transformed into millimeters. An average daily temperature variable was added to represent overall warmth or coldness and data was restricted to years 2018-2025 to match the time frames of MTA and COVID datasets. 
+
+#### **Weather Data**
+
+
+```{r weather-table, echo=FALSE, message=FALSE, warning=FALSE}
+nyc_weather =
+read.csv("data/nyc_weather.csv")
+
+weather_df =
+  nyc_weather |> 
+  janitor::clean_names() |> 
+  mutate(
+    date = as.Date(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date),
+    month = case_match(month,
+                       1 ~ "January",
+                       2 ~ "February",
+                       3 ~ "March", 
+                       4 ~ "April",
+                       5 ~ "May",
+                       6 ~ "June",
+                       7 ~ "July",
+                       8 ~ "August",
+                       9 ~ "September", 
+                       10 ~ "October",
+                       11 ~ "November",
+                       12 ~ "December"
+    ),
+    tmin_c = tmin / 10,
+    tmax_c = tmax / 10,
+    average_temp = (tmin_c + tmax_c) / 2,
+  ) |> 
+  filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
+
+weather_df |>
+  select(
+    station,
+    date,
+    prcp,
+    snow,
+    snow_attributes,
+    tmax,
+    tmin,
+  ) |>
+  head(5) |>
+  knitr::kable(
+    "html",
+  )
+```
+
 
