@@ -1,16 +1,537 @@
 ---
 title: "Combined Data-Analysis"
 
-
-subtitle: "."
-
+author: "Identifying the potential relationships of MTA, Weather, and Covid-19 combined"
 
 output: 
   html_document:
     toc: true
     toc_float: true
-
+    code_folding: hide
 ---
----
 
+## COVID-19 and MTA  
+
+### MTA Ridership and Covid-19 Cases
+Taken together, the combined COVID–MTA visualization shows a clear relationship between pandemic waves and shifts in transit use. Each major COVID-19 surge coincides with an abrupt interruption in ridership recovery, with the steepest drops occurring during the earliest lockdown period and partial rebounds following the rollout of vaccines. Even as case counts declined and remained more stable through later years, ridership showed a slower, uneven return, highlighting how the pandemic not only caused short-term disruptions but also reshaped long-term travel behavior across the MTA system. 
+
+To examine these disruptions more systematically, we next define specific surge periods and quantify how ridership levels changed relative to 2018 baselines, allowing us to compare the severity of each wave and identify which transit modes demonstrated the most resilience across these shocks.
+
+```{r setup, include=FALSE}
+library(lubridate)
+library(tidyverse)
+library(plotly)
+library(janitor)
+library(scales)
+library(broom)
+library(knitr)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
+
+covid_df =
+read.csv("data/covid_19.csv")
+
+clean_covid_df =
+  covid_df |>
+  janitor::clean_names() |>
+  mutate(
+    date = lubridate::mdy(date_of_interest),
+    case_count = as.numeric(gsub(",", "", case_count)),
+    case_count_7day_avg = as.numeric(gsub(",", "", case_count_7day_avg)),
+    hospitalized_count = as.numeric(gsub(",", "", hospitalized_count)),
+    death_count = as.numeric(gsub(",", "", death_count))
+  ) |>
+  arrange(date)
+
+events = tibble(
+  event = c("Lockdown", "Vaccine rollout", "Omicron surge"),
+  start = as.Date(c("2020-03-15", "2020-12-14", "2021-12-01")),
+  end   = as.Date(c("2020-06-15", "2021-03-01", "2022-02-15"))
+)
+
+max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
+
+nyc_weather =
+read.csv("data/nyc_weather.csv")
+
+
+weather_df =
+  nyc_weather |> 
+  janitor::clean_names() |> 
+  mutate(
+    date = as.Date(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date),
+    month = case_match(month,
+                       1 ~ "January",
+                       2 ~ "February",
+                       3 ~ "March", 
+                       4 ~ "April",
+                       5 ~ "May",
+                       6 ~ "June",
+                       7 ~ "July",
+                       8 ~ "August",
+                       9 ~ "September", 
+                       10 ~ "October",
+                       11 ~ "November",
+                       12 ~ "December"
+    ),
+    tmin_c = tmin / 10,
+    tmax_c = tmax / 10,
+    average_temp = (tmin_c + tmax_c) / 2,
+  ) |> 
+  filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
+
+
+daily_mta = 
+  read.csv("data/mta.csv")
+
+monthly_mta =
+  read.csv("data/monthly_mta.csv")
+
+monthly_pre =
+  monthly_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      agency %in% c("Subway","MNR","LIRR","AAR","SIR") ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |>
+  filter(
+    year >= 2018,
+    year <= 2019,
+    !is.na(mode)
+  ) |>
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      mode %in% c("AAR","Subway","LIRR","MNR","SIR") ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(year >= 2020, !is.na(mode)) |> 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday")
+  )
+
+monthly_post =
+  daily_mta_clean |>
+  group_by(year, month_num, month_name, mode) |>
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |>
+  arrange(year, month_num, mode) |>
+  mutate(
+    date = as.Date(paste(year, month_num, "01", sep = "-")),
+    period = case_when(
+      year < 2020 ~ "Pre-Pandemic",
+      year == 2020 & month_num <= 2 ~ "Pre-Pandemic",
+      year == 2020 & month_num >= 3 ~ "Pandemic",
+      year == 2021 ~ "Pandemic",
+      year >= 2022 ~ "Post-Pandemic"),
+    period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
+  )
+
+```
+
+```{r}
+# Average daily MYA Ridership 
+ridership_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    avg_daily_ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ridership_plot =
+  ridership_modes |>
+  plot_ly(
+    x     = ~date,
+    y     = ~avg_daily_ridership,
+    color = ~mode_group,
+    name  = ~mode_group,
+    legendgroup = ~mode_group,
+    type  = "scatter",
+    mode  = "lines"
+  ) |>
+  layout(
+    title = list(
+      text = "NYC MTA Ridership and COVID-19 Cases",
+      x    = 0.5
+    ),
+    yaxis = list(title = "Average Daily Ridership"),
+    showlegend = TRUE
+  )
+
+#COVID Daily PLOT visulation- same as above but without viridis 
+
+covid_daily_plot =
+  clean_covid_df |>
+  plot_ly(
+    x = ~date,
+    y = ~case_count,
+    type = "scatter",
+    mode = "lines",
+    line = list(color = "firebrick", width = 0.7),
+    showlegend = FALSE   
+  ) |>
+  layout(
+    yaxis = list(
+      title = "Daily COVID-19 Cases (log scale)",
+      type  = "log"
+    ),
+    xaxis = list(title = "Date"),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.02,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+
+final_figure =
+  subplot(
+    ridership_plot,
+    covid_daily_plot,
+    nrows   = 2,
+    shareX  = TRUE,
+    titleX  = TRUE,
+    titleY  = TRUE,
+    heights = c(0.55, 0.45)
+  ) |>
+  layout(
+    height    = 550,
+    hovermode = "x unified"
+  )
+
+final_figure
+```
+
+
+### Ridership During Key Periods Compared to 2018
+This figure summarizes how MTA ridership across bus, subway, and other transit modes shifted during each major COVID-19 wave, expressed as a percentage of 2018 baseline levels. Across all modes, the initial lockdown period produced the steepest and most immediate collapse in ridership, reflecting stay-at-home orders and widespread service avoidance. During the vaccine-rollout wave, ridership began to rebound, though the extent of recovery varied by mode and remained well below pre-pandemic levels. 
+In contrast, the Omicron surge, despite extremely high case counts, did not trigger comparable ridership declines. With schools, workplaces, and businesses remaining open and population immunity much higher, behavioral responses were far less severe, allowing ridership to continue its gradual return. Together, these patterns highlight how the relationship between COVID-19 transmission and mobility weakened over time as public policy and collective behavior adapted.
+```{r}
+
+monthly_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+monthly_covid =
+  clean_covid_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    monthly_cases = sum(case_count, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_joined =
+  monthly_modes |>
+  left_join(monthly_covid, by = "date")
+
+monthly_surge =
+  monthly_joined |>
+  mutate(
+    surge_period = case_when(
+      date >= as.Date("2020-03-01") & date <= as.Date("2020-06-01") ~ "Lockdown wave",
+      date >= as.Date("2020-12-01") & date <= as.Date("2021-03-01") ~ "Vaccine-rollout wave",
+      date >= as.Date("2021-12-01") & date <= as.Date("2022-02-01") ~ "Omicron surge",
+      TRUE ~ "Other months"
+    )
+  )
+
+monthly_surge_filtered =
+  monthly_surge |> 
+  filter(surge_period != "Other months") |> 
+  mutate(
+    surge_period = factor(surge_period,
+                          levels = c("Lockdown wave",
+                                     "Vaccine-rollout wave",
+                                     "Omicron surge"))
+  )
+
+baseline_2018 =
+  monthly_surge |>  
+  filter(year(date) == 2018) |>
+  group_by(mode_group) |>
+  summarise(
+    baseline_2018 = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+surge_summary =
+  monthly_surge_filtered |>
+  group_by(mode_group, surge_period) |>
+  summarise(
+    mean_ridership = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  left_join(baseline_2018, by = "mode_group") |>
+  mutate(
+    pct_of_2018 = mean_ridership / baseline_2018
+  )
+
+plotly_surge =
+  surge_summary |>
+  plot_ly(
+    x = ~surge_period,
+    y = ~pct_of_2018,
+    color = ~mode_group,
+    type = "bar",
+    hovertemplate =
+      "<b>%{x}</b><br>"    %+%
+      "Mode: %{color}<br>" %+%
+      "Ridership: %{y:.1%} of 2018<extra></extra>"
+  ) |>
+  layout(
+    barmode = "group",
+    title = list(
+      text = "MTA Ridership During COVID Surges<br><sup>Relative to 2018 baseline</sup>",
+      x = 0.5
+    ),
+    xaxis = list(title = "COVID Surge Period"),
+    yaxis = list(
+      title = "% of 2018 Ridership",
+      tickformat = ".0%",
+      range = c(0, max(surge_summary$pct_of_2018) * 1.15)
+    ),
+    legend = list(title = list(text = "Mode"))
+  )
+
+plotly_surge
+```
+
+## Weather and MTA 
+### Average Monthly Temperature and MTA Ridership
+The plot shows that monthly temperature has very little influence on MTA ridership. Across subway, bus, and other modes, ridership stays fairly stable at both low and high temperatures, and the trend lines are nearly flat. Even during very cold or warm months, ridership does not shift in a clear or consistent way. Overall, weather appears to have only a small effect compared with the larger disruptions seen during the pandemic.
+
+```{r}
+monthly_weather =
+  weather_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    avg_temp = mean(average_temp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_weather_mta =
+  monthly_modes |>
+  left_join(monthly_weather, by = "date")
+
+ggplot(monthly_weather_mta,
+       aes(x = avg_temp, y = ridership, color = mode_group)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE, size = 1.2) +
+  labs(
+    title = "Relationship Between Temperature and MTA Ridership (Monthly)",
+    x = "Average Monthly Temperature (°C)",
+    y = "Ridership",
+    color = "Transit Mode"
+  ) +
+  theme_minimal(base_size = 14)
+```
+### Extreme weather conditions (% Change compared to normal ridership days)
+```{r}
+weather_clean =
+  weather_df |>
+  mutate(
+    avg_temp_c = average_temp,
+    tmax_c,
+    prcp_mm = prcp/10,    
+    snow_mm = snow
+  ) |>
+  select(date, avg_temp_c, tmax_c, prcp_mm, snow_mm)
+
+# defining the limits for extreme weather 
+weather_extreme =
+  weather_clean |>
+  mutate(
+    extreme =
+      tmax_c >= 32.2 |     
+      prcp_mm >= 25.4 |    
+      snow_mm >= 127      
+  ) |>
+  select(date, extreme)
+
+ridership_weather =
+  ridership_modes |>
+  left_join(weather_extreme, by = "date") |>
+  mutate(extreme = replace_na(extreme, FALSE))
+
+#computing percent change 
+extreme_summary =
+  ridership_weather |>
+  group_by(mode_group, extreme) |>
+  summarise(
+    mean_ridership = mean(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop_last"
+  ) |>
+  summarise(
+    pct_drop =
+      (mean_ridership[extreme == TRUE] -
+       mean_ridership[extreme == FALSE]) /
+       mean_ridership[extreme == FALSE],
+    .groups = "drop"
+  )
+
+#plot 
+extreme_plot =
+  ggplot(extreme_summary,
+         aes(x = mode_group, y = pct_drop, fill = mode_group)) +
+  geom_col(width = 0.7, show.legend = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(values = c(
+    "Bus"    = "#1b9e77",
+    "Other"  = "#d95f02",
+    "Subway" = "#7570b3"
+  )) +
+  labs(
+    title = "Percent Change in Ridership on Extreme Weather Days",
+    x = "Mode",
+    y = "% Change (Extreme vs Normal)"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(plot.title = element_text(face = "bold"))
+
+extreme_plot
+```
+
+
+```{r extreme_legend, results='asis', echo=FALSE}
+cat('
+<div class="extreme-legend">
+  <strong>Extreme Weather Definition</strong>
+  <ul>
+    <li><span class="legend-color bus"></span> <b>Maximum temperature ≥</b> 32.2°C</li>
+    <li><span class="legend-color other"></span> <b>Precipitation ≥</b> 25.4 mm </li>
+    <li><span class="legend-color subway"></span> <b>Snow ≥</b>  127 mm</li>
+  </ul>
+</div>
+')
+```
+
+## MTA x WEATHER x COVID Analysis- Linear Regression
+The linear regression models examined how monthly temperature and COVID-19 case counts affected ridership across bus, subway, and other transit modes. Temperature was not a significant predictor for any mode, showing that normal month-to-month weather variation did not meaningfully influence transit demand. In contrast, COVID-19 case counts had strong and consistent negative associations with ridership across all modes, indicating that pandemic surges were the primary drivers of declines in transit use. Although some temperature coefficients were large, their standard errors were also large, which resulted in non-significant t-values. Overall, the analysis shows that COVID-19 had a much greater impact on ridership than typical weather changes.
+
+```{r}
+monthly_all =
+  monthly_joined |>      
+  # Replaced missing COVID values with 0 (pre-pandemic months)
+  mutate(monthly_cases = ifelse(is.na(monthly_cases), 0, monthly_cases)) |>
+  
+  left_join(
+    weather_df |>
+      mutate(month = as.Date(cut(date, "month"))) |>
+      group_by(month) |>
+      summarise(avg_temp = mean(average_temp, na.rm = TRUE),
+                .groups = "drop") |>
+      rename(date = month),
+    by = "date"
+  )
+
+#Linear Model 
+model_results =
+  monthly_all |>
+  group_by(mode_group) |>
+  do(tidy(lm(ridership ~ avg_temp + monthly_cases, data = .)))
+
+model_clean =
+  model_results |>
+  mutate(
+    term = recode(
+      term,
+      "(Intercept)" = "Intercept",
+      "avg_temp" = "Average Temperature (°C)",
+      "monthly_cases" = "Monthly COVID-19 Cases"
+    ),
+    estimate  = round(estimate, 1),
+    std.error = round(std.error, 1),
+    statistic = round(statistic, 2),
+    p.value   = signif(p.value, 3)
+  ) |>
+  arrange(mode_group, term)
+
+# Making table look nicer 
+model_clean |>
+  rename(
+    Term = term,
+    Estimate = estimate,
+    `Std. Error` = std.error,
+    `t value` = statistic,
+    `p value` = p.value
+  ) |>
+  arrange(mode_group, Term) |>
+  kable(
+    caption = "Linear Models: Effect of Temperature and COVID-19 Cases on Ridership",
+    digits = 3
+  )
+```
 
