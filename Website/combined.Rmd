@@ -17,7 +17,7 @@ Taken together, the combined COVID–MTA visualization shows a clear relationshi
 
 To examine these disruptions more systematically, we next define specific surge periods and quantify how ridership levels changed relative to 2018 baselines, allowing us to compare the severity of each wave and identify which transit modes demonstrated the most resilience across these shocks.
 
-```{r setup, include=FALSE}
+```{r, warning=FALSE, message=FALSE}
 library(lubridate)
 library(tidyverse)
 library(plotly)
@@ -160,7 +160,7 @@ full_mta =
 
 ```
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # Average daily MYA Ridership 
 ridership_modes =
   full_mta |>
@@ -371,7 +371,7 @@ plotly_surge
 ### Average Monthly Temperature and MTA Ridership
 The plot shows that monthly temperature has very little influence on MTA ridership. Across subway, bus, and other modes, ridership stays fairly stable at both low and high temperatures, and the trend lines are nearly flat. Even during very cold or warm months, ridership does not shift in a clear or consistent way. Overall, weather appears to have only a small effect compared with the larger disruptions seen during the pandemic.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 monthly_weather =
   weather_df |>
   mutate(month = as.Date(cut(date, "month"))) |>
@@ -398,7 +398,9 @@ ggplot(monthly_weather_mta,
   ) +
   theme_minimal(base_size = 14)
 ```
+
 ### Extreme weather conditions (% Change compared to normal ridership days)
+
 ```{r}
 weather_clean =
   weather_df |>

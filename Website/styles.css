@@ -1,0 +1,98 @@
+/* ============================================================
+   GLOBAL FONT — FORCE ROBOTO
+   ============================================================ */
+body {
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  line-height: 1.45;
+  font-size: 17px;
+  color: #1a1a1a;
+}
+
+/* ============================================================
+   HEADERS — FONT + COLOR
+   ============================================================ */
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+  font-weight: 500 !important;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  color: #555B70;   /* your blue-gray */
+}
+
+/* ============================================================
+   SECTION SPACING
+   ============================================================ */
+section, .section, .content {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* ============================================================
+   NAVBAR (TOP MENU)
+   ============================================================ */
+.navbar {
+  background-color:#555B70 !important;
+}
+
+.navbar a {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+/* ============================================================
+   LINKS
+   ============================================================ */
+a {
+  color:#9197AF!important;
+}
+
+a:hover {
+  color: #333232 !important;
+  text-decoration: underline;
+}
+
+/* ============================================================
+   UNIVERSAL TAB OVERRIDE
+   Works for ALL R Markdown tabsets:
+   - .nav-tabs
+   - .nav-pills
+   - .tabset
+   - .nav
+   ============================================================ */
+
+/* ACTIVE TAB (highlight color) */
+.tabset > .nav > li.active > a,
+.tabset > .nav > li.active > a:hover,
+.tabset > .nav > li.active > a:focus,
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
+.nav-tabs > li.active > a:focus,
+.nav-pills > li.active > a,
+.nav-pills > li.active > a:hover,
+.nav-pills > li.active > a:focus,
+.nav > li.active > a,
+.nav > li.active > a:hover,
+.nav > li.active > a:focus {
+    background-color: #4F6698 !important;   /* highlight color */
+    color: white !important;
+    border-color: #4F6698 !important;
+}
+
+/* INACTIVE TAB TEXT */
+.tabset > .nav > li > a,
+.nav-tabs > li > a,
+.nav-pills > li > a,
+.nav > li > a {
+    color: #4F6698 !important;
+}
+
+/* HOVER ON INACTIVE TABS */
+.tabset > .nav > li > a:hover,
+.nav-tabs > li > a:hover,
+.nav-pills > li > a:hover,
+.nav > li > a:hover {
+    background-color: #E6E9F3 !important;
+    color: #4F6698 !important;
+}
+
+

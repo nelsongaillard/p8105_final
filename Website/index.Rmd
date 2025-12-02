@@ -1,31 +1,32 @@
 ---
 title: "Riding Out the Storm: MTA Ridership Through COVID and Weather"
-
-
 subtitle: "Jeff Remo, Jonathan Huynh, Mahitha Jangeti (mj3229), Nelson Gaillard, Matariya Rattanapan (mkr2158)"
-
-
 output: 
   html_document:
     toc: true
     toc_float: true
-
+    css: styles.css
 ---
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
 <style>
 h1.title {
   text-align: center;
   color: black !important;
+  margin-bottom: 5px;    
 }
 
 h2.subtitle, .subtitle {
   text-align: center;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 400;
-  color: black !important;    /* <-- forces the color */
-  margin-top: -10px;
+  color: black !important;
+  margin-top: 10px;     
+  margin-bottom: 20px;    
 }
 </style>
----
+
+
 
 
 ![](images/mta.jpg)

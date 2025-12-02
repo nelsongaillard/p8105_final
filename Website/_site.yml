@@ -18,3 +18,6 @@ navbar:
 output:
   html_document:
     theme: flatly
+    highlight: textmate
+    df_print: paged
+    css: styles.css    
