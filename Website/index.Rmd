@@ -40,6 +40,10 @@ The Metropolitan Transportation Authority (MTA), founded in 1968, operates the s
 
 The COVID-19 pandemic fundamentally altered patterns of public transit use, exposing the sensitivity of urban mobility to both public-health and environmental conditions. Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, and how long recovery took across time and boroughs. Such insights can guide policy around public health preparedness, transit safety, and infrastructure planning under climate variability. Keep scrolling to learn more of these trends in depth!
 
+<div style="margin-top: 20px;"></div>
+
+<img src="images/gif.gif" width="100%" style="display:block; margin:auto;">
+
 
 ## Data Sources
 
@@ -51,7 +55,8 @@ The COVID-19 pandemic fundamentally altered patterns of public transit use, expo
 
 [NOAA Weather Data-NYC Central Park](https://www.ncei.noaa.gov/access/search/data-search/daily-summaries?stations=USW00094728)
 
-A closer look at the
-[MTA Map](https://www.mta.info/map/5256)
+
+## Explore the NYC Subway System
+[MTA Subway Map](https://www.mta.info/map/5256)
 
 
