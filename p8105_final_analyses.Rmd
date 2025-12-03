@@ -565,7 +565,7 @@ ggplot(aes(x = weekend, y = count, fill = weekend)) +
   facet_wrap(~mode, scales = "free_y") +
   scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
   labs(
-    title = "Weekday vs Weekend Ridership During Pandemic (2020–2021)",
+    title = "Weekday vs Weekend Ridership During Post-Pandemic (2022–2025)",
     x = "",
     y = "Daily Ridership"
   ) +
@@ -857,7 +857,6 @@ Although the Omicron surge resulted in a spike in case counts, New York City did
 It is also of interest to examine how varying weather and temperature patterns may affect ridership in NYC.
 
 #### Average Monthly Temperature and MTA Ridership
-
 ```{r}
 
 monthly_weather =
@@ -890,7 +889,6 @@ ggplot(monthly_weather_mta,
 Based on this plot, there is a dip in average ridership as temperatures approach temperatures greater than 25°C, likely due to excess heat and lack of ventilation in MTA subway stations. Overall, temperature does not appear to have that much of an impact on MTA ridership; trend lines remain relatively consistent across all average monthly temperatures. 
 
 #### Extreme weather conditions (% Change compared to normal ridership days)
-
 ```{r}
 weather_clean =
   weather_df |>
@@ -965,7 +963,6 @@ Subway ridership shows a lesser percent decrease at ~14% lesser ridership during
 Last, Bus ridership averages a ~7% decrease in average daily ridership on extreme weather days, making it the most resilient to extreme weather compared to the other transit modes. Bus riders may see buses as a safer option in snow/rain/heat. During extreme weather events, there is no doubt that street-level service is disrupted, especially during heavy rainfall and snowfall, but these effects are still smaller than those for subway riders and riders within the "Other" category. 
 
 # MTA x WEATHER x COVID Analysis- Linear Regression 
-
 ```{r}
 monthly_all =
   monthly_joined |>      
