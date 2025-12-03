@@ -25,7 +25,7 @@ The MTA Daily Ridership dataset provides information on passengers across differ
 </div>
 
 ### Data-Cleaning
-To create a clean dataset, column names were standardized and the data field was converted to a proper `Date` format. Ridership counts were originally stored as character strings with commas, so these were parsed into numeric values. Becuase there were several versions of the same transit mode, all bus-related categories were collapsed into a single "Bus" mode and other similar standardization was done for rail services. Additional variables were created to capture the year, month, weekday, and weekend indicators. Only records from 2020 onward were kept, reflecting the period when daily reporting became consistent during the pandemic. 
+To create a clean dataset, column names were standardized and the data field was converted to a proper `Date` format. Ridership counts were originally stored as character strings with commas, so these were parsed into numeric values. Because there were several versions of the same transit mode, all bus-related categories were collapsed into a single "Bus" mode and other similar standardization was done for rail services. Additional variables were created to capture the year, month, weekday, and weekend indicators. Only records from 2020 onward were kept, reflecting the period when daily reporting became consistent during the pandemic. 
 
 ---
 
@@ -144,7 +144,7 @@ knitr::kable(
 <div class="section">
 ## **NYC COVID-19 Daily Case Counts (2020-2025)**
 
-The COVID-19 dataset contains daily count of confirmed COVID-19 cases, hospitalizations, and deaths across New York City. These data track the trajectory of NYC's major waves: initial lock down, winter surge, variants Delta, and Omicron allowing us to identify periods of rapid transmission and compare them to changes in transit behavior. 
+The COVID-19 dataset contains daily count of confirmed COVID-19 cases, hospitalizations, and deaths across New York City. These data track the trajectory of NYC's major waves: initial lock down, winter surge, variants Delta and Omicron, allowing us to identify periods of rapid transmission and compare them to changes in transit behavior. 
 
 ### Variables 
 <div class="var-list">
@@ -214,7 +214,7 @@ The NOAA Daily Summaries dataset provides daily meteorological observations coll
 </div>
 
 ### Data-Cleaning
-The weather dataset required unit conversion and date standardization before analysis. After cleaning the column names, data field was converted to proper format and year and month values were extracted. NOAA records temperatures, precipitation, and snow in tenths of their actual units, so min and max temperatures were converted to degrees Celsius by dividing by ten. Precipitation and snow were also transformed into millimeters. An average daily temperature variable was added to represent overall warmth or coldness and data was restricted to years 2018-2025 to match the time frames of MTA and COVID datasets. 
+The weather dataset required unit conversion and date standardization before analysis. After cleaning the column names, data field was converted to proper format and year and month values were extracted. NOAA records temperatures, precipitation, and snow were in tenths of their actual units, so min and max temperatures were converted to degrees Celsius by dividing by ten. Precipitation and snow were also transformed into millimeters. An average daily temperature variable was added to represent overall warmth or coldness and data was restricted to years 2018-2025 to match the time frames of MTA and COVID datasets. 
 
 #### **Weather Data**
 

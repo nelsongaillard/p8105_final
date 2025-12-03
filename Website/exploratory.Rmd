@@ -15,7 +15,7 @@ output:
 On this page, we'll explore the separate data sources before combining them to analyze overall trends in MTA ridership, weather, and COVID-19 in New York City.
 
 ## COVID-19 Analysis
-This section explores how COVID-19 spread across the New York City area from 2020-2025 using daily confirmed case counts, weekly averages, and hospitalizations and death. We highlight the major pandemic periods to reveal long-term patterns. 
+This section explores how COVID-19 spread across the New York City area from 2020-2025, using daily confirmed case counts, weekly averages, hospitalizations, and death. We highlight major pandemic periods to reveal long-term patterns. 
 
 ```{r setup, include=FALSE}
 library(lubridate)
@@ -52,7 +52,7 @@ max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
 
 
 ### Daily COVID-19 Case Trends 
-Daily case trends provide the most granular view of transmission through different time periods. We visualize the data using a log scale to better highlight variation through the different periods: lockdown, vaccine rollout, and Omicron.
+Daily case trends provide the most granular view of transmission throughout different time periods. We visualize the data using a log scale to better highlight variation through the different periods: lockdown, vaccine rollout, and Omicron.
 
 
 ```{r}
@@ -111,7 +111,7 @@ clean_covid_df |>
 The log-scale plot shows NYC’s daily COVID-19 cases from 2020–2025, with darker colors indicating lower counts and bright yellow marking the highest case days. The largest spike appears during the Omicron surge, far exceeding the earlier lockdown and vaccine-rollout waves even after log transformation. After Omicron, case levels drop substantially and settle into smaller, seasonal winter increases (which is expected) through 2023–2025, indicating a sustained decline in large outbreaks.
 
 ### Weekly COVID-19 Case Trends
-Weekly trends illustrate longer-term trends in transmisstion.
+Weekly trends illustrate longer-term trends in transmission.
 
 ```{r}
 clean_covid_df |> 
@@ -300,7 +300,7 @@ weather_df |>
   ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-Across these winters, snowfall is highly variable: 2018 and 2021 stand out as the snowiest seasons // 2019, 2020, 2024, and 2025 show more moderate but still noticeable accumulation spread across one or two winter months, 2022 has relatively light snowfall, and 2023 is nearly snow-free. Overall, the uneven pattern highlights how nYC winters have become increasingly inconsistent. 
+Across these winters, snowfall is highly variable: 2018 and 2021 stand out as the snowiest seasons // 2019, 2020, 2024, and 2025 show more moderate but still noticeable accumulation spread across one or two winter months, 2022 has relatively light snowfall, and 2023 is nearly snow-free. Overall, the uneven pattern highlights how NYC winters have become increasingly inconsistent. 
 
 ### Rainfall Distribution
 Beyond snow, winter precipitation also shapes mobility and service disruptions. Once again, we focus on December-March to capture primary cold-weather precipitation months. 
@@ -330,10 +330,10 @@ weather_df |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters—such as 2018, 2019, and 2022—show consistently high precipitation across all four months, whereas others like 2020 and 2025 appear drier overall.
+Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters—such as 2018, 2019, and 2022, show consistently high precipitation across all four months, whereas others like 2020 and 2025 appear drier overall.
 
 ## MTA Analysis 
-This section examines ridership trends across teh MTA's major transit modes. We combine monthly pre-pandemic data with daily pandemic data to create a long-term dataset that reflects how mobility is affected during COVID-19. 
+This section examines ridership trends across the MTA's major transit modes. We combine monthly pre-pandemic data with daily pandemic data to create a long-term dataset that reflects how mobility is affected during COVID-19. 
 
 ```{r}
 library(lubridate)
@@ -483,7 +483,7 @@ combined = pre / pandemic / post
 
 combined
 ```
-Before COVID-19, ridership had predictable seasonal patterns. However, in March 20202, ridership collapsed across the system with subways and commuter rail experiencing the most dramatic declines. From 2022 onwards, ridership seems to recover at different paces based on mode. Buses seemed to have recovered quicker while commuter rail remains below pre-pandemic baseline possibly due to more remote work and reduced commuting.  
+Before COVID-19, ridership had predictable seasonal patterns. However, in March 2020, ridership collapsed across the system with subways and commuter rail experiencing the most dramatic declines. From 2022 onwards, ridership seems to recover at different paces based on transit mode. Buses seemed to have recovered quicker while commuter rail remains below pre-pandemic baseline, possibly due to more remote work and reduced commuting.  
 
 ### Weekday vs Weekend Ridership Volume During and Post-Pandemic
 This comparison highlights changes in commuting through different parts of the week during and post-pandemic. 
@@ -540,5 +540,6 @@ combined_weekend = pre_wknd / post_wknd
 combined_weekend
 ```
 
-During 2020-2021 (COVID-19), weekday ridership collapses due to restrictions and remote work more than weekend ridership. After 2022, when COVID-19 was declining, weekend ridership rebounds more quickly than weekday especially for the Subway. This may be commuting for leisure-oriented activities rather than work. 
+During 2020-2021 (COVID-19), weekday ridership collapses due to restrictions and remote work more than weekend ridership. After 2022, when COVID-19 was declining, weekend ridership rebounds more quickly than weekday especially for the Subway. This may be due to commuting for leisure-oriented activities rather than work. 
 
+Now that we understand the separate datasets, we can look at how they interact. Visit the **[Combined Analysis](combined.html)** page to see how weather and COVID-19 together shape MTA ridership.
