@@ -1,6 +1,6 @@
 ---
 title: "Riding Out the Storm: MTA Ridership Through COVID and Weather"
-subtitle: "Jeff Remo, Jonathan Huynh, Mahitha Jangeti (mj3229), Nelson Gaillard, Matariya Rattanapan (mkr2158)"
+subtitle: "Jeff Remo, Jonathan Huynh, Mahitha Jangeti, Nelson Gaillard, Matariya Rattanapan"
 output: 
   html_document:
     toc: true
