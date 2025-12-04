@@ -9,6 +9,7 @@ output:
   html_document:
     toc: true
     toc_float: true
+    code_folding: hide
 
 ---
 <style>
@@ -27,4 +28,1043 @@ h2.subtitle, .subtitle {
 </style>
 ---
 
+---
+title: "Riding Out the Storm: MTA Ridership through the COVID-19 Pandemic and Weather Variability in NYC"
+output: html_document
+date: "December 6, 2025"
+---
+
+Jefferson Remo (jr4550),
+Jonathan Huynh (jkh2157),
+Nelson Gaillard (ng3005),
+Mahitha Jangeti (mj3229),
+Matariya Rattanapan (mkr2158)
+
+## Motivation and Related Work
+
+Keith Gessen in The New Yorker writes "[The subway] is considered a national treasure for its diversity, and also very fast if you catch the express from Queensboro Plaza to Sixty-first Street-Woodside". The Metropolitan Transportation Authority (MTA) is an essential backbone of New York City, moving millions of riders daily, enabling social, cultural, and economic activity--even for those commuting from their homes to the Columbia University Irving Medical Center.
+
+But the COVID-19 pandemic altered patterns of public transit use, especially in New York, exposing the sensitivity of urban mobility to both public-health and environmental conditions. As proponents of the MTA ourselves, we were interested in learning more about how New Yorkers who rely on buses, subways, and additional forms of public transportation adapted their behavior in response to COVID-19 and varying weather patterns from before the pandemic (2018) to now (2025). Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, ridership behavior, and public transit recovery patterns that carried such modes of transportation to the numbers we see today. These insights can guide policy around public health preparedness, climate variability, and transit safety to help support a resilient transit system that continues to meet the needs of all New Yorkers.
+
+## Initial Questions
+
+In this project, we are interested in how MTA patterns changed in response to the COVID-19 pandemic and variability in weather patterns across New York City from 2018 to 2025. 
+
+More specifically, we are interested in examining whether increases in COVID-19 cases have led to remarkable reductions in ridership, and whether the magnitude of the responses differed for buses, subways, and additional public transportation services. In addition, in looking at ridership recovery during and after the COVID-19 pandemic, we can analyze how recovery trajectories varied across transit modes. We are also eager to investigate how extreme weather events--such as heavy rainfall, snowstorms, and heat waves--have affected daily public transportation ridership and whether some transit modes remain more resilient to weather changes than others. 
+
+Together, these questions aim to clarify how COVID-19 and weather have disrupted urban mobility and what they reveal about the vulnerabilities of public transportation in New York City. 
+
+```{r setup, include=FALSE}
+library(lubridate)
+library(tidyverse)
+library(plotly)
+library(patchwork)
+library(dplyr)
+library(scales)
+library(knitr)
+library(broom)
+knitr::opts_chunk$set(fig.width = 10, fig.height = 6)
+```
+
+# Data: Source, Scraping, Cleaning
+
+## Exploratory Analyses
+
+### COVID-19 Analysis
+
+COVID-19 data was pulled from opendata.cityofnewyork.us, a site consisting of open data sources about various topics affecting New York City boroughs. 
+
+#### Reading in the covid datafile.
+```{r}
+covid_df =
+read.csv("data/covid_19.csv")
+```
+
+#### Separating the date variable into month, day, and year + arranging
+```{r}
+clean_covid_df =
+  covid_df |>
+  janitor::clean_names() |>
+  mutate(
+    date = lubridate::mdy(date_of_interest),
+    case_count = as.numeric(gsub(",", "", case_count)),
+    case_count_7day_avg = as.numeric(gsub(",", "", case_count_7day_avg)),
+    hospitalized_count = as.numeric(gsub(",", "", hospitalized_count)),
+    death_count = as.numeric(gsub(",", "", death_count))
+  ) |>
+  arrange(date)
+```
+
+To preemptively ensure consistency across all four data sets, date information was pulled from the data set and mutated to develop a new date variable `date_of_interest`. Additionally, `case_count`, `case_count_7day_avg`, `hospitalized_count`, and `death_count` were all formatted as numeric variables. Lastly, the data set was sorted by date.
+
+#### Marking events for lockdown, rollout of vaccine, and the surge of omicron
+```{r}
+events = tibble(
+  event = c("Lockdown", "Vaccine rollout", "Omicron surge"),
+  start = as.Date(c("2020-03-15", "2020-12-14", "2021-12-01")),
+  end   = as.Date(c("2020-06-15", "2021-03-01", "2022-02-15"))
+)
+
+max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
+```
+
+Important events pertaining to the COVID-19 pandemic were highlighted in a new dataframe `events`, marking the estimated start date and estimated end date of `Lockdown`, `Vaccine rollout`, and `Omicron surge`, respectively. 
+
+#### Plotting the daily COVID-19 cases by Year
+```{r}
+clean_covid_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~case_count,
+    type = "scatter",
+    mode = "markers+lines",
+    marker = list(
+      color = ~case_count,
+      colorscale = "Viridis",
+      size = 5,
+      opacity = 0.8,
+      colorbar = list(title = "Daily Cases")
+    ),
+    line = list(color = "gray60", width = 0.5)
+  ) |>
+  layout(
+    title = "NYC Daily COVID-19 Cases (Log Scale)",
+    xaxis = list(
+      title = "Year",
+      range = c(as.Date("2019-01-01"), as.Date("2025-12-31"))
+    ),
+    yaxis = list(
+      title = "Daily COVID-19 Cases (log scale)",
+      type = "log"
+    ),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.03,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+```
+
+Before diving deeper into further analyses, it is important to visualize COVID-19 cases across the years of interest. In a plotly, `Daily COVID-19 Cases` was plotted against `Year` using the `case_count` and `date` variables. `Daily COVID-19 Cases` was transformed to the log scale to more easily visualize the peaks/spikes of COVID-19 cases from 2020 to 2025. 
+
+Overall, the log-scale plot shows NYC's daily COVID-19 cases from 2020 to 2025, with darker colors representing lower casse counts and bright yellow marking the highest case days. The largest spike appears during the Omicron surge of the pandemic, far exceeding the earlier lockdown and vaccine-rollout waves, even after log transformation. Ultimately, case levels drop substantially after the Omicron surge and settle into smaller, seasonal increases--particularly during Winter--through 2023 to 2025. This insight indicates a sustained decline in large outbreaks.
+
+#### Plot Weekly COVID-19 Cases by Year
+```{r}
+clean_covid_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~case_count_7day_avg,
+    type = "scatter",
+    mode = "markers+lines",
+    marker = list(
+      color = ~case_count_7day_avg,
+      colorscale = "Viridis",
+      colorbar = list(title = "Weekly Avg Cases"),
+      size = 5,
+      opacity = 0.6
+    ),
+    line = list(
+      color = "gray50",
+      width = 0.6
+    ),
+    name = "7-day Average"
+  ) |>
+  layout(
+    title = "NYC Weekly COVID-19 Cases (7-day Average, Log Scale)",
+    xaxis = list(
+      range = c(as.Date("2019-01-01"), as.Date("2025-12-31")),
+      tickvals = as.Date(c("2019-01-01","2020-01-01","2021-01-01",
+                           "2022-01-01","2023-01-01","2024-01-01","2025-01-01")),
+      ticktext = c("2019","2020","2021","2022","2023","2024","2025"),
+      title = "Year"
+    ),
+    yaxis = list(
+      title = "7-day Average COVID-19 Cases (log scale)",
+      type = "log"
+    ),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.0,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+```
+
+COVID-19 over time was also visualized using the `case_count_7day_avg` variable for a more zoomed out picture of COVID-19 from 2020 to 2025. 
+
+After the initial lockdown period, the weekly average shows a sharp and sustained decline in cases, reflecting the immediate impact of reduced mobility and strict public health measures. A similar decline appears following vaccine-rollout in early 2021, where cases fall noticeably, reflecting the early effects of widespread vaccination and reduced transmission. The conclusions from this plot (`7-day Average COVID-19 Cases` vs. `Year`) align with those showcased in the plot above (`Daily COVID-19 Cases` vs. `Year`). 
+
+#### Correlation Heat Map of Cases, Hospitalization, and Deaths
+```{r}
+corr_matrix =
+  clean_covid_df |>
+    select(
+      Cases = case_count,
+      Hospitalizations = hospitalized_count,
+      Deaths = death_count
+    ) |>
+    cor(use = "complete.obs")
+
+plot_ly(
+  x = colnames(corr_matrix),
+  y = colnames(corr_matrix),
+  z = corr_matrix,
+  type = "heatmap",
+  colorscale = "YlOrRd_r",
+  zmin = min(corr_matrix),
+  zmax = max(corr_matrix),
+  text = round(corr_matrix, 2),
+  texttemplate = "%{text}",
+  textfont = list(color = "black", size = 16),
+  showscale = TRUE
+) |>
+  layout(
+    title = "Correlation Between NYC COVID-19 Cases, Hospitalizations, and Deaths",
+    xaxis = list(title = ""),
+    yaxis = list(title = "")
+  )
+```
+
+To visualize associations between COVID-19 cases, hospitalizations, and deaths, a correlation matrix was generated.
+
+The matrix shows that hospitalizations and deaths are strongly correlated, which reflects the expected clinical progression from severe illness to mortality. Cases have a moderate correlation with hospitalizations and a weak corelation with deaths, likely due to widespread vaccination, changes in testing behavior, and milder Omicron waves that reduced the proportion of severe cases.
+
+### Weather Analysis
+
+Weather data was pulled from ncei.noaa.gov, a site consisting of open data sources regarding weather patterns across the United States. Since weather is measured from multiple sites throughout NYC, Central Park was used as a proxy for all of NYC.
+
+#### Reading in weather data
+```{r}
+nyc_weather =
+read.csv("data/nyc_weather.csv")
+```
+
+#### Cleaning up weather data
+```{r}
+weather_df =
+  nyc_weather |> 
+  janitor::clean_names() |> 
+  mutate(
+    date = as.Date(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date),
+    month = case_match(month,
+                       1 ~ "January",
+                       2 ~ "February",
+                       3 ~ "March", 
+                       4 ~ "April",
+                       5 ~ "May",
+                       6 ~ "June",
+                       7 ~ "July",
+                       8 ~ "August",
+                       9 ~ "September", 
+                       10 ~ "October",
+                       11 ~ "November",
+                       12 ~ "December"
+    ),
+    tmin_c = tmin / 10,
+    tmax_c = tmax / 10,
+    average_temp = (tmin_c + tmax_c) / 2,
+  ) |> 
+  filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
+```
+
+After weather data was loaded, the `date` variable was coded as a date, and the year and month were extracted such that the month name replaced the month number. This process makes faceting and labeling easier when developing plots. Additionally, originally, the data was stored in the data set as tenths of degrees Celsius (e.g. 250 -> 25°C), so `tmin_c` and `tmax_c` were created to showcase the accurate temperature in degrees Celsius. The average temperature (`average_temp`) was calculated by taking the mean of `tmin_c` and `tmax_c`. Lastly, the data was restricted to include only years of interest: 2018 to 2025.
+
+#### Plot Average Temperature by Year
+```{r}
+weather_df |> 
+  plot_ly(
+    x = ~date,
+    y = ~average_temp,
+    type = "scatter",
+    mode = "markers",
+    marker = list(
+      color = ~average_temp,
+      colorscale = "Viridis",
+      colorbar = list(title = "Temperature (°C)"),
+      size = 5,
+      opacity = 0.7
+    )
+) |>
+  layout(
+    title = "NYC Average Temperature by Year (2018-2025)",
+    xaxis = list(title = "Year"),
+    yaxis = list(title = "Average Temperature (°C)")
+  )
+```
+
+`Average Temperature (°C)` was plotted from 2018 to 2025. This plot shows a clear and consistent seasonal pattern in NYC temperatures (using Central Park as a proxy), with colder winters (often with temperatures below 0°C) and warm summers that regularly exceed 25-30°C. 
+
+#### Plot Snow Distribution by Year
+```{r}
+weather_df |>
+  mutate(
+    month = month(date, label = TRUE, abbr = FALSE),
+    month = factor(month, 
+                   levels = c("December", "January", "February", "March"))
+  ) |>
+  filter(
+    snow > 0,
+    month %in% c("December", "January", "February", "March")
+  ) |>
+  group_by(year, month) |>
+  summarise(total_snow = sum(snow), .groups = "drop") |> 
+  ggplot(aes(x = month, y = total_snow, fill = month)) +
+  geom_col(alpha = 0.8) +
+  facet_wrap(~year, ncol = 2) +
+  labs(
+    title = "NYC Monthly Snowfall (mm) by Year (2018-2025)",
+    x = "Month",
+    y = "Total Snowfall (mm)",
+    fill = ""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+`Total Snowfall (mm)` by year was also plotted, however NYC snowfall is charted only for December through March because these four winter months account for virtually all measurable snowfall, thus making the analysis more meaningful.
+
+Across these winters, snowfall is highly variable. 2018 and 2021 stand out as having the snowiest winters. 2019, 2020, 2024, and 2025 show more moderate (but still noticeable) snow accumulation spread across one or two winter months. 2022 has relatively light snowfall, and 2023 is nearly snowfall-free. The discrepancy in snowfall consistency highlights how NYC winters have become increasingly inconsistent. 
+
+#### Plot Rainfall Distribution
+```{r}
+weather_df |>
+  mutate(
+    month = month(date, label = TRUE, abbr = FALSE),
+    month = factor(month, 
+                   levels = c("December", "January", "February", "March")),
+    prcp_mm = prcp / 10
+  ) |>
+  filter(
+    month %in% c("December", "January", "February", "March")
+  ) |>
+  group_by(year, month) |>
+  summarise(total_prcp = sum(prcp_mm), .groups = "drop") |> 
+  ggplot(aes(x = month, y = total_prcp, fill = month)) +
+  geom_col(alpha = 0.8) +
+  facet_wrap(~year, ncol = 2) +
+  labs(
+    title = "NYC Monthly Precipitation (mm) by Year (2018-2025)",
+    x = "Month",
+    y = "Total Precipitation (mm)",
+    fill = ""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Similarly, `Total Precipitation (mm)` (i.e. rainfall) by year was plotted.
+
+Most years had precipitation concentrated around December and March, while January and February vary more widely. Some winters--such as 2018, 2019, and 2020--depict consistently high precipitation across all four months, whereas other years like 2020 and 2025 appear drier overall.
+
+### MTA Analysis
+
+MTA data was pulled from data.gov, a site consisting of open data from the US government.  Both daily and monthly MTA data was imported.
+
+#### Read in MTA data
+```{r}
+daily_mta = 
+  read.csv("data/mta.csv")
+
+monthly_mta =
+  read.csv("data/monthly_mta.csv")
+```
+
+#### Clean monthly and daily MTA datasets & join
+```{r}
+monthly_pre =
+  monthly_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      agency %in% c("Subway","MNR","LIRR","AAR","SIR") ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |>
+  filter(
+    year >= 2018,
+    year <= 2019,
+    !is.na(mode)
+  ) |>
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      mode %in% c("AAR","Subway","LIRR","MNR","SIR") ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(year >= 2020, !is.na(mode)) |> 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday")
+  )
+
+monthly_post =
+  daily_mta_clean |>
+  group_by(year, month_num, month_name, mode) |>
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |>
+  arrange(year, month_num, mode) |>
+  mutate(
+    date = as.Date(paste(year, month_num, "01", sep = "-")),
+    period = case_when(
+      year < 2020 ~ "Pre-Pandemic",
+      year == 2020 & month_num <= 2 ~ "Pre-Pandemic",
+      year == 2020 & month_num >= 3 ~ "Pandemic",
+      year == 2021 ~ "Pandemic",
+      year >= 2022 ~ "Post-Pandemic"),
+    period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
+  )
+```
+
+To clean the data, `monthly_mta` was divided into data before the COVID-19 pandemic (`monthly_pre`) and data during/after the COVID-19 pandemic (`monthly_post`). Like for COVID-19 data and Weather data, `year` and `month` were both extracted. Additionally, transit modes were standardized (i.e. combining various bus agencies into `Bus`). An `average_daily_ridership` variable was created by taking monthly ridership data and divided it by the number of days in each respective month. For `monthly_pre`, only observations from years 2018 and 2019 were kept.
+
+The `daily_mta` dataset was cleaned in a similar way by converting dates (extracting year and month), parsing ridership counts, and standardizing transit modes to be consistent with `monthly_pre`. Weekend indicators were also added. Cleaned daily data was then aggregated to `monthly_post` by averaging daily ridership data across each month.
+
+Finally, pre-pandemic and post-2020 monthly datasets are combined in `full_mta`, sorted chronologically, assigned a standardized date (beginning on the first of each month), and organized into three periods--pre-pandemic, pandemic, and post-pandemic--based on year and month. 
+
+#### Pre- vs. Post-Pandemic Modeling
+```{r}
+pre =
+full_mta |> 
+  filter(
+    period == "Pre-Pandemic"
+  ) |> 
+  ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  labs(
+    title = "Pre-Pandemic Ridership Trends (2018–Feb 2020)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+pandemic =
+full_mta |> 
+  filter(
+    period == "Pandemic"
+  ) |> 
+ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1, color = "red") +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_x_date(
+    date_breaks = "6 months",
+    date_labels = "%b %Y"
+  ) +
+  labs(
+    title = "Pandemic Ridership Trends (2020–2021)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+post =
+full_mta |> 
+  filter(
+    period == "Post-Pandemic"
+  ) |> 
+  ggplot(aes(x = date, y = avg_daily_ridership)) +
+  geom_line(linewidth = 1, color = "#08519c") +
+  facet_wrap(~mode, scales = "free_y") +
+  labs(
+    title = "Post-Pandemic Ridership Trends (2022–2025)",
+    x = "Month",
+    y = "Average Daily Ridership"
+  ) +
+  theme_minimal()
+
+combined = pre / pandemic / post
+
+combined
+```
+
+Analyses for pre-pandemic, pandemic, and post-pandemic were organized into a facet grid showcasing `Average Daily Ridership` across six different modes of public transportation. 
+
+Pre-pandemic average daily ridership remained expectedly variable.
+
+Pandemic average daily ridership begins with a sharp decrease in ridership at the start of the pandemic and then gradually increases over time.
+
+Post-pandemic average daily ridership patterns (for all modes of transit except `Bus`) also tend to gradually increase up until 2025. `Bus` ridership remains relatively variable from 2022 to 2025.
+
+#### Plotting Weekday vs. Weekend Ridership Volume during Pandemic vs Post-Pandemic
+```{r}
+pre_wknd =
+daily_mta_clean |> 
+  group_by(mode, weekend) |>
+  ungroup() |> 
+  filter(
+    year %in% c(2020,2021)
+  ) |> 
+ggplot(aes(x = weekend, y = count, fill = weekend)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.12, outlier.alpha = 0.2) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
+  labs(
+    title = "Weekday vs Weekend Ridership During Pandemic (2020–2021)",
+    x = "",
+    y = "Daily Ridership"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(size = 12)
+  )
+
+post_wknd =
+daily_mta_clean |> 
+  group_by(mode, weekend) |>
+  ungroup() |> 
+  filter(
+    year %in% c(2022,2023, 2024, 2025)
+  ) |> 
+ggplot(aes(x = weekend, y = count, fill = weekend)) +
+  geom_violin(trim = TRUE, alpha = 0.7) +
+  geom_boxplot(width = 0.12, outlier.alpha = 0.2) +
+  facet_wrap(~mode, scales = "free_y") +
+  scale_fill_manual(values = c("Weekday" = "#E76F51", "Weekend" = "#2A9D8F")) +
+  labs(
+    title = "Weekday vs Weekend Ridership During Post-Pandemic (2022–2025)",
+    x = "",
+    y = "Daily Ridership"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    axis.text.x = element_text(size = 12)
+  )
+
+
+combined_weekend = pre_wknd / post_wknd
+combined_weekend
+```
+
+Using the clean daily ridership dataset, `daily_mta_clean`, a violin plot was created of daily ridership for each mode of transportation for `Weekday` and `Weekend`, comparing ridership during the pandemic (2020-2021) and following the pandemic (2022-2025). 
+
+Overall, for both pandemic and post-pandemic analyses, ridership remains decreased during the weekends. However, during the pandemic, overall ridership suffered a decrease with average daily ridership for the subway, for example, sitting at half the average daily ridership post-pandemic.
+
+Pre-pandemic ridership data could not be assess in this way since the pre-pandemic dataset only contained monthly ridership data; weekday/weekend could not be differentiated using the monthly data. Therefore, the analysis is limited to the daily ridership dataset, which includes pandemic and onward.
+
+## Additional/Grouped Analyses 
+
+### COVID and MTA Comparison 
+
+#### MTA Ridership and Covid-19 Cases
+```{r}
+# Average daily MYA Ridership 
+ridership_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    avg_daily_ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ridership_plot =
+  ridership_modes |>
+  plot_ly(
+    x     = ~date,
+    y     = ~avg_daily_ridership,
+    color = ~mode_group,
+    name  = ~mode_group,
+    legendgroup = ~mode_group,
+    type  = "scatter",
+    mode  = "lines"
+  ) |>
+  layout(
+    title = list(
+      text = "NYC MTA Ridership and COVID-19 Cases",
+      x    = 0.5
+    ),
+    yaxis = list(title = "Average Daily Ridership"),
+    showlegend = TRUE
+  )
+
+#COVID Daily PLOT visulation- same as above but without viridis 
+
+covid_daily_plot =
+  clean_covid_df |>
+  plot_ly(
+    x = ~date,
+    y = ~case_count,
+    type = "scatter",
+    mode = "lines",
+    line = list(color = "firebrick", width = 0.7),
+    showlegend = FALSE   
+  ) |>
+  layout(
+    yaxis = list(
+      title = "Daily COVID-19 Cases (log scale)",
+      type  = "log"
+    ),
+    xaxis = list(title = "Date"),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.02,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+
+final_figure =
+  subplot(
+    ridership_plot,
+    covid_daily_plot,
+    nrows   = 2,
+    shareX  = TRUE,
+    titleX  = TRUE,
+    titleY  = TRUE,
+    heights = c(0.55, 0.45)
+  ) |>
+  layout(
+    height    = 550,
+    hovermode = "x unified"
+  )
+
+final_figure
+```
+
+This plotly depicts MTA Average Daily Ridership from 2018 to 2025 atop Daily COVID-19 Cases. The MTA Average Daily Ridership plot shows three different curves--subway, bus, and other. Remaining transit mode categories are grouped into "other" due to limited counts.
+
+Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership recovery. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting transformation of transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022, the is a corresponding dip in Average Daily Ridership across all three transit mode categories. 
+
+To examine ridership interruptions more directly, it is necessary to quantify how ridership levels shifted during each wave relative to pre-pandemic baselines and to see which transit modes were most resilient across interruptions.
+
+#### Pandemic Recovery
+```{r}
+recovery =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(mode_group) |>
+  mutate(
+    baseline_2018 = mean(avg_daily_ridership[year == 2018], na.rm = TRUE),
+    pct_of_2018   = avg_daily_ridership / baseline_2018
+  ) |>
+  ungroup() |>
+  filter(date >= as.Date("2020-06-01"))
+
+
+recovery |> 
+  ggplot(aes(x = date, y = pct_of_2018, color = mode_group)) +
+    geom_smooth(se = FALSE, linewidth = 1.4) +
+    geom_hline(yintercept = 1, linetype = "dashed") +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      limits = c(0.4, 1.1)
+    ) +
+  labs(
+    title = "Ridership Recovery Relative to 2018 Baseline",
+    x = "Month",
+    y = "% of 2018 Ridership",
+    color = "Mode"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+Based on this figure, none of the transit modes have fully recovered to pre-pandemic ridership levels. Bus ridership recovered the fastest early on, but flattened around 2023. This pattern can likely be attributed to the fact that buses serve essential, local, and short-distance trips, and have "fresher" air circulation than subways, for example. For subways, ridership shows a slower, steadier recovery path and still appears to be recovering steadily as commuting patterns normalize. That said, subway ridership still remains meaningfully below pre-pandemic levels. Ridership in the `Other` category has recovered more rapidly in the post-pandemic period--likely reflecting return-to-office policies and patterns on a hybrid or fully in-person basis. Whereas individuals that use the subway or bus are more likely to live in NYC and have alternative ways of commuting to work (i.e. walking, biking), individuals who use "Other" forms of public transit are likely those using long-distance and commuter rails (i.e. LIRR, MNR) and are thus more reliant on these forms to commute to work. This explains the pattern of more rapidly growing ridership during the post-pandemic period. 
+
+#### Ridership During Key Periods Compared to 2018 
+```{r}
+monthly_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+monthly_covid =
+  clean_covid_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    monthly_cases = sum(case_count, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_joined =
+  monthly_modes |>
+  left_join(monthly_covid, by = "date")
+
+monthly_surge =
+  monthly_joined |>
+  mutate(
+    surge_period = case_when(
+      date >= as.Date("2020-03-01") & date <= as.Date("2020-06-01") ~ "Lockdown wave",
+      date >= as.Date("2020-12-01") & date <= as.Date("2021-03-01") ~ "Vaccine-rollout wave",
+      date >= as.Date("2021-12-01") & date <= as.Date("2022-02-01") ~ "Omicron surge",
+      TRUE ~ "Other months"
+    )
+  )
+
+monthly_surge_filtered =
+  monthly_surge |> 
+  filter(surge_period != "Other months") |> 
+  mutate(
+    surge_period = factor(surge_period,
+                          levels = c("Lockdown wave",
+                                     "Vaccine-rollout wave",
+                                     "Omicron surge"))
+  )
+
+baseline_2018 =
+  monthly_surge |>  
+  filter(year(date) == 2018) |>
+  group_by(mode_group) |>
+  summarise(
+    baseline_2018 = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+surge_summary =
+  monthly_surge_filtered |>
+  group_by(mode_group, surge_period) |>
+  summarise(
+    mean_ridership = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  left_join(baseline_2018, by = "mode_group") |>
+  mutate(
+    pct_of_2018 = mean_ridership / baseline_2018
+  )
+
+plotly_surge =
+  surge_summary |>
+  plot_ly(
+    x = ~surge_period,
+    y = ~pct_of_2018,
+    color = ~mode_group,
+    type = "bar",
+    hovertemplate =
+      "<b>%{x}</b><br>"    %+%
+      "Mode: %{color}<br>" %+%
+      "Ridership: %{y:.1%} of 2018<extra></extra>"
+  ) |>
+  layout(
+    barmode = "group",
+    title = list(
+      text = "MTA Ridership at Key Phases Compared to 2018 Baseline",
+      x = 0.5
+    ),
+    xaxis = list(title = "COVID Surge Period"),
+    yaxis = list(
+      title = "% of 2018 Ridership",
+      tickformat = ".0%",
+      range = c(0, max(surge_summary$pct_of_2018) * 1.15)
+    ),
+    legend = list(title = list(text = "Mode"))
+  )
+
+plotly_surge
+```
+
+This plotly represents a depiction of MTA ridership (bus, subway, and other transit modes) during key phases during the COVID-19 pandemic, shown as a percentage of 2018 daily baseline levels. 
+
+Across all transit modes, the lockdown wave produced the most dramatic decline in ridership, likely due to stay-at-home policies/orders. 
+
+During the vaccine-rollout wave, ridership partially recovered, but it depended on the transit mode. As depicted in the previous plot, Bus ridership recovery increased rapidly at first; this pattern is reflected in this plot. However, for the subway, ridership recovery remained slow and steady. Overall, there remains an increase across all transit modes, likely due to the start of vaccination campaigns, ease of lockdown and quarantine restrictions, and an increase in the number of people returning to work. That said, overall transit use remained far below pre-pandemic levels.
+
+Although the Omicron surge resulted in a spike in case counts, New York City did not reinstate shutdown measures. Workplaces, schools, and businesses remained open; vaccination rates were high; the NYC population's behavioral response was less dramatic than prior COVID-19 variants. This likely explains why ridership continued to return to pre-pandemic levels, despite the stark increase in case counts. 
+
+### Weather and MTA 
+
+It is also of interest to examine how varying weather and temperature patterns may affect ridership in NYC.
+
+#### Average Monthly Temperature and MTA Ridership
+```{r}
+
+monthly_weather =
+  weather_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    avg_temp = mean(average_temp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_weather_mta =
+  monthly_modes |>
+  left_join(monthly_weather, by = "date")
+
+ggplot(monthly_weather_mta,
+       aes(x = avg_temp, y = ridership, color = mode_group)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE, size = 1.2) +
+  labs(
+    title = "Relationship Between Temperature and MTA Ridership (Monthly)",
+    x = "Average Monthly Temperature (°C)",
+    y = "Ridership",
+    color = "Transit Mode"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+Based on this plot, there is a dip in average ridership as temperatures approach temperatures greater than 25°C, likely due to excess heat and lack of ventilation in MTA subway stations. Overall, temperature does not appear to have that much of an impact on MTA ridership; trend lines remain relatively consistent across all average monthly temperatures. 
+
+#### Extreme weather conditions (% Change compared to normal ridership days)
+```{r}
+weather_clean =
+  weather_df |>
+  mutate(
+    avg_temp_c = average_temp,
+    tmax_c,
+    prcp_mm = prcp/10,    
+    snow_mm = snow
+  ) |>
+  select(date, avg_temp_c, tmax_c, prcp_mm, snow_mm)
+
+# defining the limits for extreme weather 
+weather_extreme =
+  weather_clean |>
+  mutate(
+    extreme =
+      tmax_c >= 32.2 |     
+      prcp_mm >= 25.4 |    
+      snow_mm >= 127      
+  ) |>
+  select(date, extreme)
+
+ridership_weather =
+  ridership_modes |>
+  left_join(weather_extreme, by = "date") |>
+  mutate(extreme = replace_na(extreme, FALSE))
+
+#computing percent change 
+extreme_summary =
+  ridership_weather |>
+  group_by(mode_group, extreme) |>
+  summarise(
+    mean_ridership = mean(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop_last"
+  ) |>
+  summarise(
+    pct_drop =
+      (mean_ridership[extreme == TRUE] -
+       mean_ridership[extreme == FALSE]) /
+       mean_ridership[extreme == FALSE],
+    .groups = "drop"
+  )
+
+#plot 
+extreme_plot =
+  ggplot(extreme_summary,
+         aes(x = mode_group, y = pct_drop, fill = mode_group)) +
+  geom_col(width = 0.7, show.legend = FALSE) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_manual(values = c(
+    "Bus"    = "#1b9e77",
+    "Other"  = "#d95f02",
+    "Subway" = "#7570b3"
+  )) +
+  labs(
+    title = "Percent Change in Ridership on Extreme Weather Days",
+    x = "Mode",
+    y = "% Change (Extreme vs Normal)"
+  ) +
+  theme_minimal(base_size = 16) +
+  theme(plot.title = element_text(face = "bold"))
+
+extreme_plot
+```
+
+This plot shows the percent change in ridership on days with extreme weather. Extreme weather was defined as any maximum temperature (`tmax_c`) greater than 32.2°C, any rainfall (`prcp_mm`) greater than 25.4mm, and any snowfall (`snow_mm`) greater than 127mm. 
+
+After calculating the percent change in ridership across the three transit modes (Bus, Subway, and Other), ridership in the "Other" transit mode category shows the steepest decrease in ridership on extreme weather days with a ~22% change. These forms of transportation are more highly weather-sensitive, perhaps due to train track flooding, downed powerlines, wind damage, signal outages, and reduced service frequencies. 
+
+Subway ridership shows a lesser percent decrease at ~14% lesser ridership during extreme weather days. Subway riders may be more sensitive to weather-related disruptions due to potential subway station flooding, service delays, longer wait times, and severe heat within subway stations.
+
+Last, Bus ridership averages a ~7% decrease in average daily ridership on extreme weather days, making it the most resilient to extreme weather compared to the other transit modes. Bus riders may see buses as a safer option in snow/rain/heat. During extreme weather events, there is no doubt that street-level service is disrupted, especially during heavy rainfall and snowfall, but these effects are still smaller than those for subway riders and riders within the "Other" category. 
+
+# MTA x WEATHER x COVID Analysis- Linear Regression 
+```{r}
+monthly_all =
+  monthly_joined |>      
+  # Replaced missing COVID values with 0 (pre-pandemic months)
+  mutate(monthly_cases = ifelse(is.na(monthly_cases), 0, monthly_cases)) |>
+  
+  left_join(
+    weather_df |>
+      mutate(month = as.Date(cut(date, "month"))) |>
+      group_by(month) |>
+      summarise(avg_temp = mean(average_temp, na.rm = TRUE),
+                .groups = "drop") |>
+      rename(date = month),
+    by = "date"
+  )
+
+#Linear Model 
+model_results =
+  monthly_all |>
+  group_by(mode_group) |>
+  do(tidy(lm(ridership ~ avg_temp + monthly_cases, data = .)))
+
+model_clean =
+  model_results |>
+  mutate(
+    term = recode(
+      term,
+      "(Intercept)" = "Intercept",
+      "avg_temp" = "Average Temperature (°C)",
+      "monthly_cases" = "Monthly COVID-19 Cases"
+    ),
+    estimate  = round(estimate, 1),
+    std.error = round(std.error, 1),
+    statistic = round(statistic, 2),
+    p.value   = signif(p.value, 3)
+  ) |>
+  arrange(mode_group, term)
+
+# Making table look nicer 
+model_clean |>
+  rename(
+    Term = term,
+    Estimate = estimate,
+    `Std. Error` = std.error,
+    `t value` = statistic,
+    `p value` = p.value
+  ) |>
+  arrange(mode_group, Term) |>
+  kable(
+    caption = "Linear Models: Effect of Temperature and COVID-19 Cases on Ridership",
+    digits = 3
+  )
+
+```
+
+A linear regression model was used to examine whether monthly average temperatures and monthly COVID-19 case counts predicted ridership counts across bus, subway, and "other" transit modes.
+
+For buses, ridership decreases by 6,980 riders for every single unit increase in °C (p = 0.172). Ridership decreases by 1.5 riders for every new case of COVID-19 (p = 0.009). For "Other", ridership actually increases by 83 riders for every single unit increase in °C (p = 0.961). Ridership decreases by 0.61 riders for every new case of COVID-19 (p = 0.001). For subway, ridership decreases by 16,808 riders for every single unit increase in °C (p = 0.220). Ridership decreases by 5.8 riders for every new case of COVID-19 (p < 0.001).
+
+Across all three modes, temperature was not a significant predictor of ridership (Bus: p = 0.172; Other: p = 0.961; Subway: p = 0.220), indicating that month-to-month weather variation did not meaningfully influence transit demand. On the other hand, COVID-19 case counts was strongly and consistently associated with reduced ridership across all transit modes (Bus, Other, Subway: p < 0.05). 
+
+These models suggest that COVID-19 was the dominant driver of ridership drops during the pandemic, not weather.
+
+## Discussion
+
+The COVID-19 pandemic created unprecedented disruptions in the use of public transportation in New York City. Our analysis illustrates how these disruptions altered mobility across the city. 
+
+In 2020, at the onset of the pandemic, ridership across all modes of public transit dropped sharply and has only recovered partially in the years since, with no mode of transportation returning to 2018 baseline levels by 2025. Recovered trajectories varied substantially by transportation mode with buses rebounding earlier and more steadily, subways following with a slower, upward trend, and additional modes of public transportation lagging the longest but accelerating in recent years. These patterns likely reflect the differences in rider demographics, essential-worker travel needs, and the geographical distribution of jobs returning to in-person work. The data demonstrating that ridership has yet to return to 2018 baseline levels can likely be attributed to the advent of remote companies and the continuation of hybrid and remote work options. These factors continue to shape transit demand, even in 2025. 
+
+Our analyses also highlight that extreme weather meaningfully reduces ridership, although the severity of the effect varies by transit mode. Buses showed relatively minor declines in ridership on extreme-weather days. Subways experienced steeper drops in ridership on extreme-weather days, consistent with issues such as weather-related service disruptions and subway station flooding risks. Additional forms of public transportation--including the Long Island Railroad, Metro-North Railroad, the Staten Island Railway, and Access-A-Ride--were the most sensitive to weather impacts, likely because longer, commuter routes with their aboveground infrastructure are more vulnerable to heavy rain, snowfall, and heat-induced system failures. These findings highlight how climate variability exacerbates weaknesses in public transportation and underscore the importance of resilient infrastructure planning. 
+
+Furthermore, when considering the combined influence of weather-related events and public-health factors, our linear regression analysis shows that COVID-19 was a significant, stronger predictor of the declines in monthly ridership across all modes of transit compared to temperature. The significant negative association between COVID-19 case counts and ridership shows that COVID-19 infection risk and related transit service adjustments continued to affect transit behavior beyond the initial onset of the pandemic. On the other hand, temperature alone showed no significant association with monthly ridership. In turn, it may be beneficial to analyze the association between extreme weather days and daily ridership. That said, these results emphasize that the MTA ridership was remained highly sensitive to the COVID-19 pandemic while facing additional operational strain thanks to extreme-weather events (although insignificant). 
+
+In conclusion, post-pandemic changes in ridership behavior and increasing climate variability presents ongoing challenges for the MTA and potentially other transit agencies across the United States. Understanding which transit modes are most vulnerable--and under what conditions (both public-health- and weather-wise)--can bolster targeted investments in public transportation system resilience, rider safety, and surveillance and communication strategies. As New York City continues to adapt to this new normal, strengthening flexibility of the MTA will be vital in supporting equitable mobility, building trust in the system, and maintaining the subway as the national treasure--as Keith Gessen puts it--that it truly is. 
 
