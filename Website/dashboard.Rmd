@@ -156,6 +156,21 @@ full_mta =
     period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
   )
 
+monthly_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
 recovery =
   full_mta |>
   mutate(
@@ -312,6 +327,31 @@ recovery |>
 ### Chart C
 
 ```{r}
+monthly_weather =
+  weather_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    avg_temp = mean(average_temp, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_weather_mta =
+  monthly_modes |>
+  left_join(monthly_weather, by = "date")
+
+ggplot(monthly_weather_mta,
+       aes(x = avg_temp, y = ridership, color = mode_group)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(se = FALSE, size = 1.2) +
+  labs(
+    title = "Relationship Between Temperature and MTA Ridership (Monthly)",
+    x = "Average Monthly Temperature (°C)",
+    y = "Ridership",
+    color = "Transit Mode"
+  ) +
+  theme_minimal(base_size = 14)
 ```
 
 
