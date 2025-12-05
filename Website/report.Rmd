@@ -41,10 +41,42 @@ Mahitha Jangeti (mj3229),
 Matariya Rattanapan (mkr2158)
 
 ## Motivation and Related Work
+```{r}
+htmltools::HTML('
+<div style="
+  text-align: center; 
+  padding: 40px 20px; 
+  margin: 40px auto;
+  max-width: 800px;
+  background-color: #f8f9fa;
+  border-left: 5px solid #3498db;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+">
+  <blockquote style="
+    font-size: 1.3em;
+    font-style: italic;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.6;
+  ">
+    "[The subway] is considered a national treasure for its diversity, and also very fast if you catch the express from Queensboro Plaza to Sixty-first Street-Woodside"
+  </blockquote>
+  <p style="
+    margin-top: 20px;
+    font-size: 0.95em;
+    color: #7f8c8d;
+    font-weight: 500;
+  ">
+    — Keith Gessen, <em>The New Yorker</em>
+  </p>
+</div>
+')
+```
 
-Keith Gessen in The New Yorker writes "[The subway] is considered a national treasure for its diversity, and also very fast if you catch the express from Queensboro Plaza to Sixty-first Street-Woodside". The Metropolitan Transportation Authority (MTA) is an essential backbone of New York City, moving millions of riders daily, enabling social, cultural, and economic activity--even for those commuting from their homes to the Columbia University Irving Medical Center.
+The Metropolitan Transportation Authority (MTA) is an essential backbone of New York City, moving millions of riders daily, enabling social, cultural, and economic activity--even for those commuting from their homes to the Columbia University Irving Medical Center.
 
-But the COVID-19 pandemic altered patterns of public transit use, especially in New York, exposing the sensitivity of urban mobility to both public-health and environmental conditions. As proponents of the MTA ourselves, we were interested in learning more about how New Yorkers who rely on buses, subways, and additional forms of public transportation adapted their behavior in response to COVID-19 and varying weather patterns from before the pandemic (2018) to now (2025). Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, ridership behavior, and public transit recovery patterns that carried such modes of transportation to the numbers we see today. These insights can guide policy around public health preparedness, climate variability, and transit safety to help support a resilient transit system that continues to meet the needs of all New Yorkers.
+But the COVID-19 pandemic altered patterns of public transit use, especially in New York, exposing the sensitivity of urban mobility to both public-health and environmental conditions. As riders of the MTA ourselves, we were interested in learning more about how New Yorkers who rely on buses, subways, and other forms of public transportation adapted their behavior in response to COVID-19 and varying weather patterns from before the pandemic (2018) to now (2025). Examining how MTA ridership fluctuated with changing case counts and weather conditions can help identify which factors most strongly affected transit demand, ridership behavior, and public transit recovery patterns that carried such modes of transportation to the numbers we see today. These insights can guide policy around public health preparedness, climate variability, and transit safety to help support a resilient transit system that continues to meet the needs of all New Yorkers.
 
 ## Initial Questions
 

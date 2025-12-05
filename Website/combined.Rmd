@@ -15,7 +15,7 @@ output:
 ### MTA Ridership and Covid-19 Cases
 This plotly depicts MTA Average Daily Ridership from 2018 to 2025 atop Daily COVID-19 Cases. The MTA Average Daily Ridership plot shows three different curves–subway, bus, and other. Remaining transit mode categories are grouped into “other” due to limited counts.
 
-Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership recovery. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting transformation of transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022, the is a corresponding dip in Average Daily Ridership across all three transit mode categories.
+Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership recovery. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting transformation of transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022,there is a corresponding dip in Average Daily Ridership across all three transit mode categories.
 
 To examine ridership interruptions more directly, it is necessary to quantify how ridership levels shifted during each wave relative to pre-pandemic baselines and to see which transit modes were most resilient across interruptions.
 
