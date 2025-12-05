@@ -308,87 +308,107 @@ final_figure
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Ridership Recovery Relative to 2018 Baseline
+### MTA Ridership at Key Phases Compared to 2018 Baseline
 
 ```{r}
-# Function to smooth data (mimics geom_smooth)
-smooth_data <- function(data, span = 0.75) {
-  data <- data |> arrange(date)
-  data$date_numeric <- as.numeric(data$date)
-  loess_model <- loess(pct_of_2018 ~ date_numeric, data = data, span = span)
-  data$pct_smoothed <- predict(loess_model)
-  return(data)
-}
-
-# Apply smoothing
-recovery_smoothed <- recovery |>
-  group_by(mode_group) |>
-  group_modify(~ smooth_data(.x)) |>
-  ungroup()
-
-# Create Plotly chart
-recovery_plot <- recovery_smoothed |>
-  plot_ly(
-    x = ~date,
-    y = ~pct_smoothed,
-    color = ~mode_group,
-    colors = c("Bus" = "#e74c3c", "Subway" = "#3498db", "Other" = "#95a5a6"),
-    type = "scatter",
-    mode = "lines",
-    line = list(width = 2.5),
-    hovertemplate = paste(
-      "<b>%{fullData.name}</b><br>",
-      "Date: %{x|%b %Y}<br>",
-      "Recovery: %{y:.1%}<br>",
-      "<extra></extra>"
+monthly_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
     )
   ) |>
-  add_segments(
-    x = as.Date("2020-06-01"),
-    xend = max(recovery$date),
-    y = 1,
-    yend = 1,
-    line = list(dash = "dash", color = "#7f8c8d", width = 2),
-    showlegend = FALSE,
-    hoverinfo = "skip",
-    inherit = FALSE
+  group_by(date, mode_group) |>
+  summarise(
+    ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+monthly_covid =
+  clean_covid_df |>
+  mutate(month = as.Date(cut(date, "month"))) |>
+  group_by(month) |>
+  summarise(
+    monthly_cases = sum(case_count, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  rename(date = month)
+
+monthly_joined =
+  monthly_modes |>
+  left_join(monthly_covid, by = "date")
+
+monthly_surge =
+  monthly_joined |>
+  mutate(
+    surge_period = case_when(
+      date >= as.Date("2020-03-01") & date <= as.Date("2020-06-01") ~ "Lockdown wave",
+      date >= as.Date("2020-12-01") & date <= as.Date("2021-03-01") ~ "Vaccine-rollout wave",
+      date >= as.Date("2021-12-01") & date <= as.Date("2022-02-01") ~ "Omicron surge",
+      TRUE ~ "Other months"
+    )
+  )
+
+monthly_surge_filtered =
+  monthly_surge |> 
+  filter(surge_period != "Other months") |> 
+  mutate(
+    surge_period = factor(surge_period,
+                          levels = c("Lockdown wave",
+                                     "Vaccine-rollout wave",
+                                     "Omicron surge"))
+  )
+
+baseline_2018 =
+  monthly_surge |>  
+  filter(year(date) == 2018) |>
+  group_by(mode_group) |>
+  summarise(
+    baseline_2018 = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+surge_summary =
+  monthly_surge_filtered |>
+  group_by(mode_group, surge_period) |>
+  summarise(
+    mean_ridership = mean(ridership, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  left_join(baseline_2018, by = "mode_group") |>
+  mutate(
+    pct_of_2018 = mean_ridership / baseline_2018
+  )
+
+plotly_surge =
+  surge_summary |>
+  plot_ly(
+    x = ~surge_period,
+    y = ~pct_of_2018,
+    color = ~mode_group,
+    type = "bar",
+    hovertemplate =
+      "<b>%{x}</b><br>"    %+%
+      "Mode: %{color}<br>" %+%
+      "Ridership: %{y:.1%} of 2018<extra></extra>"
   ) |>
   layout(
-    xaxis = list(
-      title = "Month",
-      tickformat = "%b %Y",
-      gridcolor = "#ecf0f1"
+    barmode = "group",
+    title = list(
+      text = "",
+      x = 0.5
     ),
+    xaxis = list(title = "COVID Surge Period"),
     yaxis = list(
       title = "% of 2018 Ridership",
       tickformat = ".0%",
-      range = c(0.4, 1.1),
-      gridcolor = "#ecf0f1"
+      range = c(0, max(surge_summary$pct_of_2018) * 1.15)
     ),
-    hovermode = "x unified",
-    legend = list(
-      title = list(text = "Mode"),
-      orientation = "v",
-      x = 1.02,
-      y = 1,
-      xanchor = "left"
-    ),
-    plot_bgcolor = "#f8f9fa",
-    paper_bgcolor = "white",
-    annotations = list(
-      list(
-        x = max(recovery$date),
-        y = 1.02,
-        text = "100% Recovery",
-        showarrow = FALSE,
-        xanchor = "right",
-        font = list(size = 10, color = "#7f8c8d")
-      )
-    ),
-    margin = list(r = 100)
+    legend = list(title = list(text = "Mode"))
   )
-
-recovery_plot
+plotly_surge
 ```
 
 ### Temperature vs Ridership
