@@ -13,9 +13,11 @@ output:
 ## COVID-19 and MTA  
 
 ### MTA Ridership and Covid-19 Cases
-Taken together, the combined COVID–MTA visualization shows a clear relationship between pandemic waves and shifts in transit use. Each major COVID-19 surge coincides with an abrupt interruption in ridership recovery, with the steepest drops occurring during the earliest lockdown period and partial rebounds following the rollout of vaccines. Even as case counts declined and remained more stable through later years, ridership showed a slower, uneven return, highlighting how the pandemic not only caused short-term disruptions but also reshaped long-term travel behavior across the MTA system. 
+This plotly depicts MTA Average Daily Ridership from 2018 to 2025 atop Daily COVID-19 Cases. The MTA Average Daily Ridership plot shows three different curves–subway, bus, and other. Remaining transit mode categories are grouped into “other” due to limited counts.
 
-To examine these disruptions more systematically, we next define specific surge periods and quantify how ridership levels changed relative to 2018 baselines, allowing us to compare the severity of each wave and identify which transit modes demonstrated the most resilience across these shocks.
+Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership recovery. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting transformation of transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022, the is a corresponding dip in Average Daily Ridership across all three transit mode categories.
+
+To examine ridership interruptions more directly, it is necessary to quantify how ridership levels shifted during each wave relative to pre-pandemic baselines and to see which transit modes were most resilient across interruptions.
 
 ```{r, warning=FALSE, message=FALSE}
 library(lubridate)
@@ -161,7 +163,7 @@ full_mta =
 ```
 
 ```{r, warning=FALSE, message=FALSE}
-# Average daily MYA Ridership 
+# Average daily MTA Ridership 
 ridership_modes =
   full_mta |>
   mutate(
@@ -260,9 +262,54 @@ final_figure =
 final_figure
 ```
 
+#### Pandemic Recovery 
+```{r}
+recovery =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(mode_group) |>
+  mutate(
+    baseline_2018 = mean(avg_daily_ridership[year == 2018], na.rm = TRUE),
+    pct_of_2018   = avg_daily_ridership / baseline_2018
+  ) |>
+  ungroup() |>
+  filter(date >= as.Date("2020-06-01"))
+
+
+recovery |> 
+  ggplot(aes(x = date, y = pct_of_2018, color = mode_group)) +
+    geom_smooth(se = FALSE, linewidth = 1.4) +
+    geom_hline(yintercept = 1, linetype = "dashed") +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      limits = c(0.4, 1.1)
+    ) +
+  labs(
+    title = "Ridership Recovery Relative to 2018 Baseline",
+    x = "Month",
+    y = "% of 2018 Ridership",
+    color = "Mode"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+```
+Based on this figure, none of the transit modes have fully recovered to pre-pandemic ridership levels. Bus ridership recovered the fastest early on, but flattened around 2023. This pattern can likely be attributed to the fact that buses serve essential, local, and short-distance trips, and have “fresher” air circulation than subways, for example. For subways, ridership shows a slower, steadier recovery path and still appears to be recovering steadily as commuting patterns normalize. That said, subway ridership still remains meaningfully below pre-pandemic levels. Ridership in the Other category has recovered more rapidly in the post-pandemic period–likely reflecting return-to-office policies and patterns on a hybrid or fully in-person basis. Whereas individuals that use the subway or bus are more likely to live in NYC and have alternative ways of commuting to work (i.e. walking, biking), individuals who use “Other” forms of public transit are likely those using long-distance and commuter rails (i.e. LIRR, MNR) and are thus more reliant on these forms to commute to work. This explains the pattern of more rapidly growing ridership during the post-pandemic period.
+
+
 
 ### Ridership During Key Periods Compared to 2018
 This figure summarizes how MTA ridership across bus, subway, and other transit modes shifted during each major COVID-19 wave, expressed as a percentage of 2018 baseline levels. Across all modes, the initial lockdown period produced the steepest and most immediate collapse in ridership, reflecting stay-at-home orders and widespread service avoidance. During the vaccine-rollout wave, ridership began to rebound, though the extent of recovery varied by mode and remained well below pre-pandemic levels. 
+
 In contrast, the Omicron surge, despite extremely high case counts, did not trigger comparable ridership declines. With schools, workplaces, and businesses remaining open and population immunity much higher, behavioral responses were far less severe, allowing ridership to continue its gradual return. Together, these patterns highlight how the relationship between COVID-19 transmission and mobility weakened over time as public policy and collective behavior adapted.
 ```{r}
 
@@ -480,7 +527,7 @@ cat('
 ')
 ```
 
-## MTA x WEATHER x COVID Analysis- Linear Regression
+## MTA, WEATHER, and COVID Analysis- Linear Regression
 The linear regression models examined how monthly temperature and COVID-19 case counts affected ridership across bus, subway, and other transit modes. Temperature was not a significant predictor for any mode, showing that normal month-to-month weather variation did not meaningfully influence transit demand. In contrast, COVID-19 case counts had strong and consistent negative associations with ridership across all modes, indicating that pandemic surges were the primary drivers of declines in transit use. Although some temperature coefficients were large, their standard errors were also large, which resulted in non-significant t-values. Overall, the analysis shows that COVID-19 had a much greater impact on ridership than typical weather changes.
 
 ```{r}
