@@ -1,30 +1,318 @@
 ---
-title: "MTA Ridership Dashboard"
-
-
-subtitle: "."
-
-
+title: "Dashboard"
 output: 
-  html_document:
-    toc: true
-    toc_float: true
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: cosmo
+code_folding: hide
 
 ---
-<style>
-h1.title {
-  text-align: center;
-  color: black !important;
-}
 
-h2.subtitle, .subtitle {
-  text-align: center;
-  font-size: 15px;
-  font-weight: 400;
-  color: black !important;    /* <-- forces the color */
-  margin-top: -10px;
-}
-</style>
----
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(lubridate)
+library(tidyverse)
+library(plotly)
+library(dplyr)
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE
+)
+```
+
+
+```{r}
+covid_df =
+read.csv("data/covid_19.csv")
+
+clean_covid_df =
+  covid_df |>
+  janitor::clean_names() |>
+  mutate(
+    date = lubridate::mdy(date_of_interest),
+    case_count = as.numeric(gsub(",", "", case_count)),
+    case_count_7day_avg = as.numeric(gsub(",", "", case_count_7day_avg)),
+    hospitalized_count = as.numeric(gsub(",", "", hospitalized_count)),
+    death_count = as.numeric(gsub(",", "", death_count))
+  ) |>
+  arrange(date)
+
+events = tibble(
+  event = c("Lockdown", "Vaccine rollout", "Omicron surge"),
+  start = as.Date(c("2020-03-15", "2020-12-14", "2021-12-01")),
+  end   = as.Date(c("2020-06-15", "2021-03-01", "2022-02-15"))
+)
+
+max_y <- max(clean_covid_df$case_count, na.rm = TRUE)
+
+nyc_weather =
+read.csv("data/nyc_weather.csv")
+
+
+weather_df =
+  nyc_weather |> 
+  janitor::clean_names() |> 
+  mutate(
+    date = as.Date(date),
+    year = lubridate::year(date),
+    month = lubridate::month(date),
+    month = case_match(month,
+                       1 ~ "January",
+                       2 ~ "February",
+                       3 ~ "March", 
+                       4 ~ "April",
+                       5 ~ "May",
+                       6 ~ "June",
+                       7 ~ "July",
+                       8 ~ "August",
+                       9 ~ "September", 
+                       10 ~ "October",
+                       11 ~ "November",
+                       12 ~ "December"
+    ),
+    tmin_c = tmin / 10,
+    tmax_c = tmax / 10,
+    average_temp = (tmin_c + tmax_c) / 2,
+  ) |> 
+  filter(year %in% c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025))
+
+
+daily_mta = 
+  read.csv("data/mta.csv")
+
+monthly_mta =
+  read.csv("data/monthly_mta.csv")
+
+monthly_pre =
+  monthly_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = as.Date(month),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    ridership = parse_number(ridership),
+
+    mode = case_when(
+      agency %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      agency %in% c("Subway","MNR","LIRR","AAR","SIR") ~ agency,
+      TRUE ~ NA_character_
+    ),
+
+    days_in_month = days_in_month(date),
+    avg_daily_ridership = ridership / days_in_month
+  ) |>
+  filter(
+    year >= 2018,
+    year <= 2019,
+    !is.na(mode)
+  ) |>
+  select(year, month_num, month_name, mode, avg_daily_ridership)
+
+daily_mta_clean =
+  daily_mta |>
+  janitor::clean_names() |>
+  mutate(
+    date = mdy(date),
+    year = year(date),
+    month_num = month(date),
+    month_name = month(date, label = TRUE, abbr = FALSE),
+    count = parse_number(count),
+
+    mode = case_when(
+      mode %in% c("NYCT Bus", "MTA Bus", "Bus") ~ "Bus",
+      mode %in% c("AAR","Subway","LIRR","MNR","SIR") ~ mode,
+      TRUE ~ NA_character_
+    )
+  ) |>
+  filter(year >= 2020, !is.na(mode)) |> 
+  mutate(
+    weekday = wday(date, label = TRUE),
+    weekend = ifelse(weekday %in% c("Sat", "Sun"), "Weekend", "Weekday")
+  )
+
+monthly_post =
+  daily_mta_clean |>
+  group_by(year, month_num, month_name, mode) |>
+  summarise(
+    avg_daily_ridership = mean(count, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+full_mta =
+  bind_rows(monthly_pre, monthly_post) |>
+  arrange(year, month_num, mode) |>
+  mutate(
+    date = as.Date(paste(year, month_num, "01", sep = "-")),
+    period = case_when(
+      year < 2020 ~ "Pre-Pandemic",
+      year == 2020 & month_num <= 2 ~ "Pre-Pandemic",
+      year == 2020 & month_num >= 3 ~ "Pandemic",
+      year == 2021 ~ "Pandemic",
+      year >= 2022 ~ "Post-Pandemic"),
+    period = factor(period, levels = c("Pre-Pandemic", "Pandemic", "Post-Pandemic"))
+  )
+
+recovery =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(mode_group) |>
+  mutate(
+    baseline_2018 = mean(avg_daily_ridership[year == 2018], na.rm = TRUE),
+    pct_of_2018   = avg_daily_ridership / baseline_2018
+  ) |>
+  ungroup() |>
+  filter(date >= as.Date("2020-06-01"))
+
+
+```
+
+
+ {data-width=650}
+-----------------------------------------------------------------------
+
+
+```{r}
+# Average daily MYA Ridership 
+ridership_modes =
+  full_mta |>
+  mutate(
+    mode_group = case_when(
+      mode == "Bus"    ~ "Bus",
+      mode == "Subway" ~ "Subway",
+      TRUE             ~ "Other"
+    )
+  ) |>
+  group_by(date, mode_group) |>
+  summarise(
+    avg_daily_ridership = sum(avg_daily_ridership, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ridership_plot =
+  ridership_modes |>
+  plot_ly(
+    x     = ~date,
+    y     = ~avg_daily_ridership,
+    color = ~mode_group,
+    name  = ~mode_group,
+    legendgroup = ~mode_group,
+    type  = "scatter",
+    mode  = "lines"
+  ) |>
+  layout(
+    title = list(
+      text = "NYC MTA Ridership and COVID-19 Cases",
+      x    = 0.5
+    ),
+    yaxis = list(title = "Average Daily Ridership"),
+    showlegend = TRUE
+  )
+
+#COVID Daily PLOT visulation- same as above but without viridis 
+
+covid_daily_plot =
+  clean_covid_df |>
+  plot_ly(
+    x = ~date,
+    y = ~case_count,
+    type = "scatter",
+    mode = "lines",
+    line = list(color = "firebrick", width = 0.7),
+    showlegend = FALSE   
+  ) |>
+  layout(
+    yaxis = list(
+      title = "Daily COVID-19 Cases (log scale)",
+      type  = "log"
+    ),
+    xaxis = list(title = "Date"),
+    shapes = lapply(1:nrow(events), function(i) {
+      list(
+        type = "rect",
+        xref = "x",
+        x0 = events$start[i],
+        x1 = events$end[i],
+        yref = "paper",
+        y0 = 0,
+        y1 = 1,
+        fillcolor = "rgba(255, 0, 0, 0.15)",
+        line = list(width = 0),
+        layer = "below"
+      )
+    }),
+    annotations = lapply(1:nrow(events), function(i) {
+      list(
+        x = events$start[i] + (events$end[i] - events$start[i]) / 2,
+        y = 1.02,
+        xref = "x",
+        yref = "paper",
+        text = events$event[i],
+        showarrow = FALSE,
+        font = list(size = 12)
+      )
+    })
+  )
+
+final_figure =
+  subplot(
+    ridership_plot,
+    covid_daily_plot,
+    nrows   = 2,
+    shareX  = TRUE,
+    titleX  = TRUE,
+    titleY  = TRUE,
+    heights = c(0.55, 0.45)
+  ) |>
+  layout(
+    height    = 550,
+    hovermode = "x unified"
+  )
+
+final_figure
+```
+
+### Chart B {data-width=350}
+-----------------------------------------------------------------------
+
+```{r}
+recovery |> 
+  ggplot(aes(x = date, y = pct_of_2018, color = mode_group)) +
+    geom_smooth(se = FALSE, linewidth = 1.4) +
+    geom_hline(yintercept = 1, linetype = "dashed") +
+    scale_y_continuous(
+      labels = scales::percent_format(accuracy = 1),
+      limits = c(0.4, 1.1)
+    ) +
+  labs(
+    title = "Ridership Recovery Relative to 2018 Baseline",
+    x = "Month",
+    y = "% of 2018 Ridership",
+    color = "Mode"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "right",
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold")
+  )
+```
+
+
+
+### Chart C
+
+```{r}
+```
+
 
 
