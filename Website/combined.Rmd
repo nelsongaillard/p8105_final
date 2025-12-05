@@ -1,7 +1,7 @@
 ---
 title: "Combined Data-Analysis"
 
-author: "Identifying the potential relationships of MTA, Weather, and Covid-19 combined"
+author: "Investigate the potential relationship that Weather and the Covid-19 Pandemic had on MTA Ridership"
 
 output: 
   html_document:
@@ -13,11 +13,9 @@ output:
 ## COVID-19 and MTA  
 
 ### MTA Ridership and Covid-19 Cases
-This plotly depicts MTA Average Daily Ridership from 2018 to 2025 atop Daily COVID-19 Cases. The MTA Average Daily Ridership plot shows three different curves–subway, bus, and other. Remaining transit mode categories are grouped into “other” due to limited counts.
+In this plotly we investigated MTA Average Daily Ridership from 2018 to 2025 atop Daily COVID-19 Cases. The MTA Average Daily Ridership plot shows the three different transportation curves–subway, bus, and other.
 
-Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership recovery. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting transformation of transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022,there is a corresponding dip in Average Daily Ridership across all three transit mode categories.
-
-To examine ridership interruptions more directly, it is necessary to quantify how ridership levels shifted during each wave relative to pre-pandemic baselines and to see which transit modes were most resilient across interruptions.
+Taken together, the two panels suggest that COVID-19 surges correspond with noticeable interruptions in ridership. The figure highlights both the immediate impact of COVID-19 waves and the broader, lasting change in transit behavior in NYC. For example, during the Omicron surge in late 2021 to early 2022, there is a corresponding dip in Average Daily Ridership across all three transit mode categories.
 
 ```{r, warning=FALSE, message=FALSE}
 library(lubridate)
@@ -263,7 +261,8 @@ final_figure
 ```
 
 #### Pandemic Recovery 
-```{r}
+To examine ridership interruptions more directly, we looked to quantify how ridership shifted during each wave relative to pre-pandemic baselines and to see which transit modes were most resilient across interruptions.
+```{r, message=FALSE, warning=FALSE}
 recovery =
   full_mta |>
   mutate(
@@ -303,16 +302,20 @@ recovery |>
     plot.title = element_text(face = "bold")
   )
 ```
-Based on this figure, none of the transit modes have fully recovered to pre-pandemic ridership levels. Bus ridership recovered the fastest early on, but flattened around 2023. This pattern can likely be attributed to the fact that buses serve essential, local, and short-distance trips, and have “fresher” air circulation than subways, for example. For subways, ridership shows a slower, steadier recovery path and still appears to be recovering steadily as commuting patterns normalize. That said, subway ridership still remains meaningfully below pre-pandemic levels. 
+Based on this figure, none of the transit modes have fully recovered to pre-pandemic ridership levels. Bus ridership recovered the fastest early on, but flattened around 2023. For subways, ridership shows a slower, steadier recovery path and still appears to be recovering steadily as commuting patterns normalize. That said, subway ridership still remains meaningfully below pre-pandemic levels. 
 
-Ridership in the Other category has recovered more rapidly in the post-pandemic period–likely reflecting return-to-office policies and patterns on a hybrid or fully in-person basis. Whereas individuals that use the subway or bus are more likely to live in NYC and have alternative ways of commuting to work (i.e. walking, biking), individuals who use “Other” forms of public transit are likely those using long-distance and commuter rails (i.e. LIRR, MNR) and are thus more reliant on these forms to commute to work. This explains the pattern of more rapidly growing ridership during the post-pandemic period.
+Ridership in the Other category has recovered more rapidly in the post-pandemic period, likely reflecting return-to-office policies and patterns on a hybrid or fully in-person basis. Whereas individuals that use the subway or bus are more likely to live in NYC and have alternative ways of commuting to work (i.e. walking, biking), individuals who use “Other” forms of public transit are likely those using long-distance and commuter rails (i.e. LIRR, MNR) and are  more reliant on these forms for their commute. 
 
 
 ### Ridership During Key Periods Compared to 2018
-This figure summarizes how MTA ridership across bus, subway, and other transit modes shifted during each major COVID-19 wave, expressed as a percentage of 2018 baseline levels. Across all modes, the initial lockdown period produced the steepest and most immediate collapse in ridership, reflecting stay-at-home orders and widespread service avoidance. During the vaccine-rollout wave, ridership began to rebound, though the extent of recovery varied by mode and remained well below pre-pandemic levels. 
+These bar graphs show how many people used the subway, bus, and other MTA services during major COVID-19 waves. When the pandemic first hit and the city went into lockdown, ridership dropped dramatically. People stayed home, and many were afraid to use public transit.
 
-In contrast, the Omicron surge, despite extremely high case counts, did not trigger comparable ridership declines. With schools, workplaces, and businesses remaining open and population immunity much higher, behavioral responses were far less severe, allowing ridership to continue its gradual return. Together, these patterns highlight how the relationship between COVID-19 transmission and mobility weakened over time as public policy and collective behavior adapted.
-```{r}
+During the vaccine rollout period, more people started riding again. However, ridership was still much lower than before the pandemic. Different types of transit recovered at different speeds.
+
+The Omicron wave was different. Even though COVID cases were extremely high, ridership didn't drop as much. Schools and businesses stayed open, more people had immunity from vaccines, and riders felt safer. People kept using transit at steady levels.
+
+These patterns show an important trend: as time went on, COVID surges had less impact on how many people rode the MTA. New Yorkers learned to adapt and continued using public transit even during outbreaks.
+```{r, warning=FALSE}
 
 monthly_modes =
   full_mta |>
@@ -449,7 +452,7 @@ ggplot(monthly_weather_mta,
 
 ### Extreme weather conditions (% Change compared to normal ridership days)
 
-```{r}
+```{r, warning=FALSE}
 weather_clean =
   weather_df |>
   mutate(
@@ -531,7 +534,7 @@ cat('
 ## MTA, WEATHER, and COVID Analysis- Linear Regression
 The linear regression models examined how monthly temperature and COVID-19 case counts affected ridership across bus, subway, and other transit modes. Temperature was not a significant predictor for any mode, showing that normal month-to-month weather variation did not meaningfully influence transit demand. In contrast, COVID-19 case counts had strong and consistent negative associations with ridership across all modes, indicating that pandemic surges were the primary drivers of declines in transit use. Although some temperature coefficients were large, their standard errors were also large, which resulted in non-significant t-values. Overall, the analysis shows that COVID-19 had a much greater impact on ridership than typical weather changes.
 
-```{r}
+```{r, warning=FALSE}
 monthly_all =
   monthly_joined |>      
   # Replaced missing COVID values with 0 (pre-pandemic months)
