@@ -5,8 +5,6 @@ output:
     orientation: columns
     vertical_layout: fill
     theme: cosmo
-code_folding: hide
-
 ---
 
 ```{r setup, include=FALSE}
@@ -192,12 +190,13 @@ recovery =
 ```
 
 
- {data-width=650}
+Column {data-width=650}
 -----------------------------------------------------------------------
 
+### NYC MTA Ridership and COVID-19 Cases
 
 ```{r}
-# Average daily MYA Ridership 
+# Average daily MTA Ridership 
 ridership_modes =
   full_mta |>
   mutate(
@@ -219,22 +218,30 @@ ridership_plot =
     x     = ~date,
     y     = ~avg_daily_ridership,
     color = ~mode_group,
+    colors = c("Bus" = "#e74c3c", "Subway" = "#3498db", "Other" = "#95a5a6"),
     name  = ~mode_group,
     legendgroup = ~mode_group,
     type  = "scatter",
-    mode  = "lines"
+    mode  = "lines",
+    line  = list(width = 2)
   ) |>
   layout(
-    title = list(
-      text = "NYC MTA Ridership and COVID-19 Cases",
-      x    = 0.5
+    yaxis = list(
+      title = "Average Daily Ridership",
+      separatethousands = TRUE
     ),
-    yaxis = list(title = "Average Daily Ridership"),
-    showlegend = TRUE
+    xaxis = list(title = ""),
+    showlegend = TRUE,
+    legend = list(
+      orientation = "h",
+      xanchor = "center",
+      x = 0.5,
+      y = -0.1
+    ),
+    margin = list(b = 40, t = 10)
   )
 
-#COVID Daily PLOT visulation- same as above but without viridis 
-
+# COVID Daily PLOT visualization
 covid_daily_plot =
   clean_covid_df |>
   plot_ly(
@@ -242,13 +249,14 @@ covid_daily_plot =
     y = ~case_count,
     type = "scatter",
     mode = "lines",
-    line = list(color = "firebrick", width = 0.7),
+    line = list(color = "firebrick", width = 1.5),
     showlegend = FALSE   
   ) |>
   layout(
     yaxis = list(
       title = "Daily COVID-19 Cases (log scale)",
-      type  = "log"
+      type  = "log",
+      separatethousands = TRUE
     ),
     xaxis = list(title = "Date"),
     shapes = lapply(1:nrow(events), function(i) {
@@ -268,14 +276,15 @@ covid_daily_plot =
     annotations = lapply(1:nrow(events), function(i) {
       list(
         x = events$start[i] + (events$end[i] - events$start[i]) / 2,
-        y = 1.02,
+        y = 1.05,
         xref = "x",
         yref = "paper",
         text = events$event[i],
         showarrow = FALSE,
-        font = list(size = 12)
+        font = list(size = 11)
       )
-    })
+    }),
+    margin = list(t = 50, b = 50)
   )
 
 final_figure =
@@ -286,45 +295,103 @@ final_figure =
     shareX  = TRUE,
     titleX  = TRUE,
     titleY  = TRUE,
-    heights = c(0.55, 0.45)
+    heights = c(0.50, 0.50),
+    margin = 0.08
   ) |>
   layout(
-    height    = 550,
     hovermode = "x unified"
   )
 
 final_figure
 ```
 
-### Chart B {data-width=350}
+Column {data-width=350}
 -----------------------------------------------------------------------
 
+### Ridership Recovery Relative to 2018 Baseline
+
 ```{r}
-recovery |> 
-  ggplot(aes(x = date, y = pct_of_2018, color = mode_group)) +
-    geom_smooth(se = FALSE, linewidth = 1.4) +
-    geom_hline(yintercept = 1, linetype = "dashed") +
-    scale_y_continuous(
-      labels = scales::percent_format(accuracy = 1),
-      limits = c(0.4, 1.1)
-    ) +
-  labs(
-    title = "Ridership Recovery Relative to 2018 Baseline",
-    x = "Month",
-    y = "% of 2018 Ridership",
-    color = "Mode"
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    legend.position = "right",
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    plot.title = element_text(face = "bold")
+# Function to smooth data (mimics geom_smooth)
+smooth_data <- function(data, span = 0.50) {
+  data <- data |> arrange(date)
+  data$date_numeric <- as.numeric(data$date)
+  loess_model <- loess(pct_of_2018 ~ date_numeric, data = data, span = span)
+  data$pct_smoothed <- predict(loess_model)
+  return(data)
+}
+
+# Apply smoothing
+recovery_smoothed <- recovery |>
+  group_by(mode_group) |>
+  group_modify(~ smooth_data(.x)) |>
+  ungroup()
+
+# Create Plotly chart
+recovery_plot <- recovery_smoothed |>
+  plot_ly(
+    x = ~date,
+    y = ~pct_smoothed,
+    color = ~mode_group,
+    colors = c("Bus" = "#e74c3c", "Subway" = "#3498db", "Other" = "#95a5a6"),
+    type = "scatter",
+    mode = "lines",
+    line = list(width = 2.5),
+    hovertemplate = paste(
+      "<b>%{fullData.name}</b><br>",
+      "Date: %{x|%b %Y}<br>",
+      "Recovery: %{y:.1%}<br>",
+      "<extra></extra>"
+    )
+  ) |>
+  add_segments(
+    x = as.Date("2020-06-01"),
+    xend = max(recovery$date),
+    y = 1,
+    yend = 1,
+    line = list(dash = "dash", color = "#7f8c8d", width = 2),
+    showlegend = FALSE,
+    hoverinfo = "skip",
+    inherit = FALSE
+  ) |>
+  layout(
+    xaxis = list(
+      title = "Month",
+      tickformat = "%b %Y",
+      gridcolor = "#ecf0f1"
+    ),
+    yaxis = list(
+      title = "% of 2018 Ridership",
+      tickformat = ".0%",
+      range = c(0.4, 1.1),
+      gridcolor = "#ecf0f1"
+    ),
+    hovermode = "x unified",
+    legend = list(
+      title = list(text = "Mode"),
+      orientation = "v",
+      x = 1.02,
+      y = 1,
+      xanchor = "left"
+    ),
+    plot_bgcolor = "#f8f9fa",
+    paper_bgcolor = "white",
+    annotations = list(
+      list(
+        x = max(recovery$date),
+        y = 1.02,
+        text = "100% Recovery",
+        showarrow = FALSE,
+        xanchor = "right",
+        font = list(size = 10, color = "#7f8c8d")
+      )
+    ),
+    margin = list(r = 100)
   )
+
+recovery_plot
 ```
 
-
-
-### Chart C
+### Temperature vs Ridership
 
 ```{r}
 monthly_weather =
@@ -341,18 +408,108 @@ monthly_weather_mta =
   monthly_modes |>
   left_join(monthly_weather, by = "date")
 
-ggplot(monthly_weather_mta,
-       aes(x = avg_temp, y = ridership, color = mode_group)) +
-  geom_point(alpha = 0.5) +
-  geom_smooth(se = FALSE, size = 1.2) +
-  labs(
-    title = "Relationship Between Temperature and MTA Ridership (Monthly)",
-    x = "Average Monthly Temperature (°C)",
-    y = "Ridership",
-    color = "Transit Mode"
-  ) +
-  theme_minimal(base_size = 14)
+# Create scatter plot for each mode
+temp_ridership_plot <- plot_ly() |>
+  add_trace(
+    data = monthly_weather_mta |> filter(mode_group == "Subway"),
+    x = ~avg_temp,
+    y = ~ridership,
+    type = "scatter",
+    mode = "markers",
+    name = "Subway",
+    marker = list(color = "#3498db", size = 6, opacity = 0.6),
+    hovertemplate = paste(
+      "<b>Subway</b><br>",
+      "Temperature: %{x:.1f}°C<br>",
+      "Ridership: %{y:,.0f}<br>",
+      "<extra></extra>"
+    )
+  ) |>
+  add_trace(
+    data = monthly_weather_mta |> filter(mode_group == "Bus"),
+    x = ~avg_temp,
+    y = ~ridership,
+    type = "scatter",
+    mode = "markers",
+    name = "Bus",
+    marker = list(color = "#e74c3c", size = 6, opacity = 0.6),
+    hovertemplate = paste(
+      "<b>Bus</b><br>",
+      "Temperature: %{x:.1f}°C<br>",
+      "Ridership: %{y:,.0f}<br>",
+      "<extra></extra>"
+    )
+  ) |>
+  add_trace(
+    data = monthly_weather_mta |> filter(mode_group == "Other"),
+    x = ~avg_temp,
+    y = ~ridership,
+    type = "scatter",
+    mode = "markers",
+    name = "Other",
+    marker = list(color = "#95a5a6", size = 6, opacity = 0.6),
+    hovertemplate = paste(
+      "<b>Other</b><br>",
+      "Temperature: %{x:.1f}°C<br>",
+      "Ridership: %{y:,.0f}<br>",
+      "<extra></extra>"
+    )
+  )
+
+# Add loess smoothing lines for each mode
+for (mode in c("Subway", "Bus", "Other")) {
+  mode_data <- monthly_weather_mta |> filter(mode_group == mode)
+  
+  if (nrow(mode_data) > 5) {
+    loess_fit <- loess(ridership ~ avg_temp, data = mode_data, span = 0.75)
+    pred_data <- data.frame(
+      avg_temp = seq(min(mode_data$avg_temp, na.rm = TRUE), 
+                     max(mode_data$avg_temp, na.rm = TRUE), 
+                     length.out = 100)
+    )
+    pred_data$ridership <- predict(loess_fit, newdata = pred_data)
+    
+    color <- ifelse(mode == "Subway", "#3498db", 
+                    ifelse(mode == "Bus", "#e74c3c", "#95a5a6"))
+    
+    temp_ridership_plot <- temp_ridership_plot |>
+      add_trace(
+        data = pred_data,
+        x = ~avg_temp,
+        y = ~ridership,
+        type = "scatter",
+        mode = "lines",
+        line = list(color = color, width = 2.5),
+        name = mode,
+        showlegend = FALSE,
+        hoverinfo = "skip"
+      )
+  }
+}
+
+temp_ridership_plot <- temp_ridership_plot |>
+  layout(
+    xaxis = list(
+      title = "Average Monthly Temperature (°C)",
+      gridcolor = "#ecf0f1"
+    ),
+    yaxis = list(
+      title = "Ridership",
+      separatethousands = TRUE,
+      gridcolor = "#ecf0f1"
+    ),
+    hovermode = "closest",
+    legend = list(
+      title = list(text = "Transit Mode"),
+      orientation = "v",
+      x = 1.02,
+      y = 1,
+      xanchor = "left"
+    ),
+    plot_bgcolor = "#f8f9fa",
+    paper_bgcolor = "white",
+    margin = list(r = 100)
+  )
+
+temp_ridership_plot
 ```
-
-
-
