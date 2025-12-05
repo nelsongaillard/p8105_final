@@ -312,7 +312,7 @@ Column {data-width=350}
 
 ```{r}
 # Function to smooth data (mimics geom_smooth)
-smooth_data <- function(data, span = 0.50) {
+smooth_data <- function(data, span = 0.75) {
   data <- data |> arrange(date)
   data$date_numeric <- as.numeric(data$date)
   loess_model <- loess(pct_of_2018 ~ date_numeric, data = data, span = span)
